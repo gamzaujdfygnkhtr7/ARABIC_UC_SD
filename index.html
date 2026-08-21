@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <!-- ملف الأنيميشن -->
+    <link
+        rel="stylesheet"
+        href="animations.css"
+    >
+
+    <title>ARABIC_UCH_SD</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #050505;
+            color: #fff;
+        }
+
+        /* =========================
+           HEADER
+        ========================= */
+
+        header {
+            height: 65px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 20px;
+
+            background: #090909;
+
+            border-bottom:
+                1px solid #3b0808;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .itachi-logo {
+            width: 43px;
+            height: 43px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            flex-shrink: 0;
+
+            border-radius: 12px;
+
+            overflow: hidden;
+
+            background: #000;
+
+            border:
+                1px solid
+                rgba(255, 0, 0, 0.25);
+
+            box-shadow:
+                0 0 18px
+                rgba(150, 0, 0, 0.25);
+        }
+
+        .itachi-logo img {
+            width: 100%;
+            height: 100%;
+
+            display: block;
+
+            object-fit: cover;
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .login-button {
+            padding: 9px 16px;
+
+            border:
+                1px solid #5c0b0b;
+
+            border-radius: 10px;
+
+            background: #8b0000;
+
+            color: white;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition: .18s ease;
+        }
+
+        .login-button:hover {
+            background: #b00000;
+        }
+
+        .login-button:active {
+            transform: scale(.96);
+        }
+
+        /* =========================
+           MENU BUTTON
+        ========================= */
+
+        .menu-button {
+            width: 44px;
+            height: 44px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border:
+                1px solid transparent;
+
+            border-radius: 11px;
+
+            background: transparent;
+
+            color: white;
+
+            cursor: pointer;
+
+            transition: .18s ease;
+        }
+
+        .menu-button:hover {
+            background: #180707;
+            border-color: #4d0b0b;
+        }
+
+        .menu-button svg {
+            width: 25px;
+            height: 25px;
+        }
+
+        /* =========================
+           OVERLAY
+        ========================= */
+
+        .menu-overlay {
+            position: fixed;
+            inset: 0;
+
+            background:
+                rgba(0, 0, 0, 0.72);
+
+            opacity: 0;
+
+            visibility: hidden;
+
+            transition:
+                opacity .25s ease,
+                visibility .25s ease;
+
+            z-index: 90;
+        }
+
+        .menu-overlay.open {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* =========================
+           SIDE MENU
+        ========================= */
+
+        .side-menu {
+            position: fixed;
+
+            top: 0;
+            right: 0;
+
+            width: 315px;
+            max-width: 88vw;
+
+            height: 100vh;
+
+            padding: 20px;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #090909 0%,
+                    #050505 100%
+                );
+
+            border-left:
+                1px solid #5a0b0b;
+
+            box-shadow:
+                -15px 0 45px
+                rgba(0,0,0,.65),
+
+                -2px 0 25px
+                rgba(100,0,0,.12);
+
+            transform:
+                translateX(105%);
+
+            transition:
+                transform .28s
+                cubic-bezier(.2,.8,.2,1);
+
+            z-index: 100;
+
+            overflow-y: auto;
+        }
+
+        .side-menu.open {
+            transform: translateX(0);
+        }
+
+        /* =========================
+           MENU HEADER
+        ========================= */
+
+        .menu-header {
+            display: flex;
+
+            align-items: center;
+            justify-content: space-between;
+
+            padding-bottom: 20px;
+
+            border-bottom:
+                1px solid #3b0808;
+        }
+
+        .menu-brand {
+            display: flex;
+
+            align-items: center;
+
+            gap: 10px;
+        }
+
+        .menu-brand-logo {
+            width: 42px;
+            height: 42px;
+
+            border-radius: 11px;
+
+            overflow: hidden;
+
+            background: #000;
+
+            border:
+                1px solid #4d0b0b;
+
+            box-shadow:
+                0 0 14px
+                rgba(150,0,0,.2);
+        }
+
+        .menu-brand-logo img {
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+        }
+
+        .menu-title {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        .menu-subtitle {
+            margin-top: 4px;
+
+            color: #8d7070;
+
+            font-size: 11px;
+        }
+
+        /* =========================
+           CLOSE
+        ========================= */
+
+        .close-button {
+            width: 40px;
+            height: 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border:
+                1px solid #421010;
+
+            border-radius: 10px;
+
+            background: #120707;
+
+            color: white;
+
+            cursor: pointer;
+        }
+
+        .close-button:hover {
+            background: #260909;
+            border-color: #7a1111;
+        }
+
+        .close-button svg {
+            width: 21px;
+            height: 21px;
+        }
+
+        /* =========================
+           MENU LINKS
+        ========================= */
+
+        .menu-links {
+            margin-top: 20px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 7px;
+        }
+
+        .menu-link {
+            width: 100%;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 12px;
+
+            padding: 13px 14px;
+
+            border:
+                1px solid transparent;
+
+            border-radius: 11px;
+
+            background: transparent;
+
+            color: #eee;
+
+            font-size: 14px;
+
+            text-align: right;
+
+            cursor: pointer;
+
+            transition: .18s ease;
+        }
+
+        .menu-link:hover {
+            background: #180707;
+
+            border-color: #4d0b0b;
+
+            color: #ffdddd;
+        }
+
+        .menu-link:active {
+            transform: scale(.98);
+        }
+
+        .menu-link svg {
+            width: 21px;
+            height: 21px;
+
+            flex-shrink: 0;
+        }
+
+        /* =========================
+           SEPARATOR
+        ========================= */
+
+        .menu-separator {
+            width: 100%;
+            height: 1px;
+
+            background: #3b0808;
+
+            margin: 13px 0;
+        }
+
+        /* =========================
+           AUTH
+        ========================= */
+
+        .auth-message {
+            margin:
+                5px 5px 12px;
+
+            color: #927777;
+
+            font-size: 12px;
+
+            line-height: 1.7;
+        }
+
+        .auth-button {
+            width: 100%;
+
+            padding: 12px;
+
+            border:
+                1px solid #5c0b0b;
+
+            border-radius: 11px;
+
+            background: #8b0000;
+
+            color: white;
+
+            font-size: 14px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            margin-bottom: 8px;
+        }
+
+        .auth-button:hover {
+            background: #b00000;
+        }
+
+        .register-button {
+            background: #140707;
+
+            border-color: #401010;
+        }
+
+        .register-button:hover {
+            background: #220909;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .container {
+            max-width: 850px;
+
+            margin: 40px auto;
+
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+
+            margin-bottom: 30px;
+        }
+
+        /* =========================
+           TEXTAREA
+        ========================= */
+
+        textarea {
+            width: 100%;
+
+            min-height: 180px;
+
+            resize: vertical;
+
+            padding: 15px;
+
+            border-radius: 12px;
+
+            border:
+                1px solid #401010;
+
+            background: #0b0b0b;
+
+            color: white;
+
+            font-size: 17px;
+
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: #9b0000;
+
+            box-shadow:
+                0 0 0 2px
+                rgba(155,0,0,.15);
+        }
+
+        /* =========================
+           LANGUAGES
+        ========================= */
+
+        .languages {
+            display: flex;
+
+            gap: 10px;
+
+            align-items: center;
+
+            margin: 15px 0;
+        }
+
+        select {
+            flex: 1;
+
+            padding: 13px;
+
+            border-radius: 10px;
+
+            background: #0b0b0b;
+
+            color: white;
+
+            border:
+                1px solid #401010;
+
+            font-size: 16px;
+
+            outline: none;
+        }
+
+        select:focus {
+            border-color: #9b0000;
+        }
+
+        /* =========================
+           SWAP
+        ========================= */
+
+        .swap {
+            width: 45px;
+            height: 45px;
+
+            border-radius: 50%;
+
+            border:
+                1px solid #401010;
+
+            background: #120707;
+
+            color: white;
+
+            font-size: 20px;
+
+            cursor: pointer;
+        }
+
+        .swap:hover {
+            background: #240909;
+        }
+
+        /* =========================
+           TRANSLATE
+        ========================= */
+
+        .translate-btn {
+            width: 100%;
+
+            padding: 15px;
+
+            border:
+                1px solid #5c0b0b;
+
+            border-radius: 12px;
+
+            background: #8b0000;
+
+            color: white;
+
+            font-size: 18px;
+
+            font-weight: bold;
+
+            cursor: pointer;
+
+            margin-bottom: 25px;
+        }
+
+        .translate-btn:hover {
+            background: #b00000;
+        }
+
+        /* =========================
+           RESULT
+        ========================= */
+
+        .result-title {
+            margin-bottom: 10px;
+
+            font-weight: bold;
+        }
+
+        .result {
+            width: 100%;
+
+            min-height: 180px;
+
+            padding: 15px;
+
+            border-radius: 12px;
+
+            background: #0b0b0b;
+
+            border:
+                1px solid #401010;
+
+            font-size: 17px;
+
+            white-space: pre-wrap;
+        }
+
+        /* =========================
+           STATUS
+        ========================= */
+
+        .status {
+            text-align: center;
+
+            margin-top: 15px;
+
+            color: #aa8888;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            header {
+                padding: 0 10px;
+            }
+
+            .itachi-logo {
+                width: 38px;
+                height: 38px;
+            }
+
+            .logo {
+                font-size: 14px;
+            }
+
+            .login-button {
+                padding:
+                    8px 10px;
+
+                font-size: 12px;
+            }
+
+            .menu-button {
+                width: 40px;
+                height: 40px;
+            }
+
+            .container {
+                margin-top: 20px;
+
+                padding: 15px;
+            }
+
+            .languages {
+                flex-direction: column;
+            }
+
+            select {
+                width: 100%;
+            }
+
+            .swap {
+                transform:
+                    rotate(90deg);
+            }
+
+            .side-menu {
+                width: 290px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<header>
+
+    <div class="brand">
+
+        <div
+            class="itachi-logo"
+            title="ITACHI UCHIHA"
+        >
+
+            <img
+                src="images/itachi_logo.png"
+                alt="ITACHI UCHIHA"
+            >
+
+        </div>
+
+        <div class="logo">
+            ARABIC_UCH_SD
+        </div>
+
+    </div>
+
+    <div class="header-actions">
+
+        <button
+            id="loginButton"
+            class="login-button"
+            type="button"
+            onclick="goToLogin()"
+        >
+            تسجيل الدخول
+        </button>
+
+        <button
+            class="menu-button"
+            type="button"
+            onclick="openMenu()"
+            aria-label="فتح القائمة"
+        >
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+            >
+
+                <line
+                    x1="4"
+                    y1="6"
+                    x2="20"
+                    y2="6"
+                />
+
+                <line
+                    x1="4"
+                    y1="12"
+                    x2="20"
+                    y2="12"
+                />
+
+                <line
+                    x1="4"
+                    y1="18"
+                    x2="20"
+                    y2="18"
+                />
+
+            </svg>
+
+        </button>
+
+    </div>
+
+</header>
+
+<!-- OVERLAY -->
+
+<div
+    id="menuOverlay"
+    class="menu-overlay"
+    onclick="closeMenu()"
+></div>
+
+<!-- SIDE MENU -->
+
+<aside
+    id="sideMenu"
+    class="side-menu"
+>
+
+    <div class="menu-header">
+
+        <div class="menu-brand">
+
+            <div class="menu-brand-logo">
+
+                <img
+                    src="images/itachi_logo.png"
+                    alt="ITACHI UCHIHA"
+                >
+
+            </div>
+
+            <div>
+
+                <div class="menu-title">
+                    ARABIC_UCH_SD
+                </div>
+
+                <div class="menu-subtitle">
+                    ITACHI ARABIC
+                </div>
+
+            </div>
+
+        </div>
+
+        <button
+            class="close-button"
+            type="button"
+            onclick="closeMenu()"
+            aria-label="إغلاق القائمة"
+        >
+
+            <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+            >
+
+                <line
+                    x1="6"
+                    y1="6"
+                    x2="18"
+                    y2="18"
+                />
+
+                <line
+                    x1="18"
+                    y1="6"
+                    x2="6"
+                    y2="18"
+                />
+
+            </svg>
+
+        </button>
+
+    </div>
+
+    <div class="menu-links">
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="goTo('index.html')"
+        >
+            <span>الرئيسية</span>
+        </button>
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="goTo('login.html')"
+        >
+            <span>تسجيل الدخول</span>
+        </button>
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="goTo('register.html')"
+        >
+            <span>إنشاء حساب</span>
+        </button>
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="protectedPage('profile.html')"
+        >
+            <span>الملف الشخصي</span>
+        </button>
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="protectedPage('dashboard.html')"
+        >
+            <span>لوحة التحكم</span>
+        </button>
+
+        <button
+            class="menu-link"
+            type="button"
+            onclick="protectedPage('settings.html')"
+        >
+            <span>الإعدادات</span>
+        </button>
+
+        <div class="menu-separator"></div>
+
+        <div id="authArea"></div>
+
+    </div>
+
+</aside>
+
+<!-- MAIN -->
+
+<div class="container">
+
+    <h1>
+        ترجمة النص
+    </h1>
+
+    <textarea
+        id="text"
+        placeholder="اكتب النص هنا..."
+    ></textarea>
+
+    <div class="languages">
+
+        <select id="source">
+
+            <option value="ar">
+                العربية
+            </option>
+
+            <option value="en">
+                English
+            </option>
+
+        </select>
+
+        <button
+            class="swap"
+            type="button"
+            onclick="swapLanguages()"
+        >
+            ⇄
+        </button>
+
+        <select id="target">
+
+            <option value="en">
+                English
+            </option>
+
+            <option value="ar">
+                العربية
+            </option>
+
+        </select>
+
+    </div>
+
+    <button
+        class="translate-btn"
+        type="button"
+        onclick="translateText()"
+    >
+        ترجمة
+    </button>
+
+    <div class="result-title">
+        النتيجة
+    </div>
+
+    <div
+        id="result"
+        class="result"
+    >
+        ستظهر الترجمة هنا...
+    </div>
+
+    <div
+        id="status"
+        class="status"
+    ></div>
+
+</div>
+
+<!-- =========================
+     BASIC SITE JAVASCRIPT
+========================= -->
+
+<script>
+
+function goTo(page) {
+
+    window.location.href = page;
+
+}
+
+
+function goToLogin() {
+
+    window.location.href =
+        "login.html";
+
+}
+
+
+function goToRegister() {
+
+    window.location.href =
+        "register.html";
+
+}
+
+
+function openMenu() {
+
+    const menu =
+        document.getElementById(
+            "sideMenu"
+        );
+
+    const overlay =
+        document.getElementById(
+            "menuOverlay"
+        );
+
+    if (menu) {
+        menu.classList.add("open");
+    }
+
+    if (overlay) {
+        overlay.classList.add("open");
+    }
+
+}
+
+
+function closeMenu() {
+
+    const menu =
+        document.getElementById(
+            "sideMenu"
+        );
+
+    const overlay =
+        document.getElementById(
+            "menuOverlay"
+        );
+
+    if (menu) {
+        menu.classList.remove("open");
+    }
+
+    if (overlay) {
+        overlay.classList.remove("open");
+    }
+
+}
+
+
+function isLoggedIn() {
+
+    return (
+        localStorage.getItem(
+            "itachi_logged_in"
+        ) === "true"
+    );
+
+}
+
+
+function protectedPage(page) {
+
+    if (isLoggedIn()) {
+
+        window.location.href =
+            page;
+
+        return;
+
+    }
+
+    showAuthMessage();
+
+}
+
+
+function showAuthMessage() {
+
+    const authArea =
+        document.getElementById(
+            "authArea"
+        );
+
+    if (!authArea) {
+        return;
+    }
+
+    authArea.innerHTML = `
+
+        <p class="auth-message">
+            عليك تسجيل الدخول أو إنشاء
+            حساب أولًا للوصول إلى هذه الصفحة.
+        </p>
+
+        <button
+            class="auth-button"
+            type="button"
+            onclick="goToLogin()"
+        >
+            تسجيل الدخول
+        </button>
+
+        <button
+            class="auth-button register-button"
+            type="button"
+            onclick="goToRegister()"
+        >
+            إنشاء حساب
+        </button>
+
+    `;
+
+}
+
+
+function buildAuthMenu() {
+
+    const authArea =
+        document.getElementById(
+            "authArea"
+        );
+
+    const loginButton =
+        document.getElementById(
+            "loginButton"
+        );
+
+    if (!authArea || !loginButton) {
+        return;
+    }
+
+    if (isLoggedIn()) {
+
+        loginButton.textContent =
+            "حسابي";
+
+        loginButton.onclick =
+            function () {
+
+                window.location.href =
+                    "profile.html";
+
+            };
+
+        authArea.innerHTML = `
+
+            <button
+                class="menu-link"
+                type="button"
+                onclick="goTo('dashboard.html')"
+            >
+                <span>
+                    لوحة التحكم
+                </span>
+            </button>
+
+            <button
+                class="menu-link"
+                type="button"
+                onclick="logout()"
+            >
+                <span>
+                    تسجيل الخروج
+                </span>
+            </button>
+
+        `;
+
+    } else {
+
+        loginButton.textContent =
+            "تسجيل الدخول";
+
+        loginButton.onclick =
+            goToLogin;
+
+        authArea.innerHTML = `
+
+            <p class="auth-message">
+                سجّل الدخول أو أنشئ حسابًا
+                للوصول إلى حسابك.
+            </p>
+
+            <button
+                class="auth-button"
+                type="button"
+                onclick="goToLogin()"
+            >
+                تسجيل الدخول
+            </button>
+
+            <button
+                class="auth-button register-button"
+                type="button"
+                onclick="goToRegister()"
+            >
+                إنشاء حساب
+            </button>
+
+        `;
+
+    }
+
+}
+
+
+function logout() {
+
+    localStorage.removeItem(
+        "itachi_logged_in"
+    );
+
+    window.location.href =
+        "index.html";
+
+}
+
+
+function swapLanguages() {
+
+    const source =
+        document.getElementById(
+            "source"
+        );
+
+    const target =
+        document.getElementById(
+            "target"
+        );
+
+    if (!source || !target) {
+        return;
+    }
+
+    const oldSource =
+        source.value;
+
+    source.value =
+        target.value;
+
+    target.value =
+        oldSource;
+
+}
+
+
+async function translateText() {
+
+    const textElement =
+        document.getElementById(
+            "text"
+        );
+
+    const sourceElement =
+        document.getElementById(
+            "source"
+        );
+
+    const targetElement =
+        document.getElementById(
+            "target"
+        );
+
+    const result =
+        document.getElementById(
+            "result"
+        );
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+    if (
+        !textElement ||
+        !sourceElement ||
+        !targetElement ||
+        !result ||
+        !status
+    ) {
+        return;
+    }
+
+    const text =
+        textElement.value.trim();
+
+    const source =
+        sourceElement.value;
+
+    const target =
+        targetElement.value;
+
+    if (!text) {
+
+        result.textContent =
+            "اكتب نصًا أولًا.";
+
+        status.textContent =
+            "";
+
+        return;
+
+    }
+
+    result.textContent =
+        "جاري الترجمة...";
+
+    status.textContent =
+        "";
+
+    try {
+
+        const response =
+            await fetch(
+                "/translate",
+                {
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    body:
+                        JSON.stringify({
+                            text: text,
+                            source: source,
+                            target: target,
+                            website: true
+                        })
+                }
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "HTTP " + response.status
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (data.success) {
+
+            result.textContent =
+                data.translation || "";
+
+            status.textContent =
+                "تمت الترجمة";
+
+        } else {
+
+            result.textContent =
+                data.message ||
+                "حدث خطأ أثناء الترجمة.";
+
+            status.textContent =
+                "فشلت الترجمة";
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        result.textContent =
+            "تعذر الاتصال بالـ API.";
+
+        status.textContent =
+            "Server Error";
+
+    }
+
+}
+
+
+document.addEventListener(
+    "keydown",
+    function (event) {
+
+        if (event.key === "Escape") {
+            closeMenu();
+        }
+
+    }
+);
+
+
+buildAuthMenu();
+
+</script>
+
+<!-- =========================
+     SUPABASE
+========================= -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    crossorigin="anonymous"
+></script>
+
+<!-- =========================
+     AUTH.JS
+========================= -->
+
+<script>
+
+window.addEventListener(
+    "load",
+    function () {
+
+        const script =
+            document.createElement(
+                "script"
+            );
+
+        script.src =
+            "js/auth.js";
+
+        script.onload =
+            function () {
+
+                console.log(
+                    "auth.js loaded successfully."
+                );
+
+            };
+
+        script.onerror =
+            function () {
+
+                console.warn(
+                    "auth.js لم يتم تحميله."
+                );
+
+            };
+
+        document.body.appendChild(
+            script
+        );
+
+    }
+);
+
+</script>
+
+</body>
+
+</html>
