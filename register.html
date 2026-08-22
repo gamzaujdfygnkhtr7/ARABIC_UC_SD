@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#050505">
+
+<title>إنشاء حساب - ARABIC_UCH_SD</title>
+
+<link rel="stylesheet" href="animations.css">
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+}
+
+body {
+
+    min-height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px;
+
+    font-family:
+        Arial,
+        "Segoe UI",
+        sans-serif;
+
+    background:
+        radial-gradient(
+            circle at 50% 10%,
+            rgba(120, 0, 0, 0.18),
+            transparent 35%
+        ),
+        #050505;
+
+    color: #fff;
+}
+
+
+/* ===============================
+   BOX
+=============================== */
+
+.register-box {
+
+    width: 100%;
+    max-width: 430px;
+
+    padding: 28px;
+
+    background:
+        rgba(255,255,255,0.035);
+
+    border:
+        1px solid
+        rgba(255,255,255,0.08);
+
+    border-radius: 22px;
+
+    box-shadow:
+        0 20px 60px
+        rgba(0,0,0,0.45);
+
+    backdrop-filter:
+        blur(18px);
+
+}
+
+
+/* ===============================
+   LOGO
+=============================== */
+
+.logo-area {
+
+    text-align: center;
+
+    margin-bottom: 24px;
+
+}
+
+.logo-area img {
+
+    width: 82px;
+    height: 82px;
+
+    display: block;
+
+    margin: 0 auto;
+
+    object-fit: cover;
+
+    border-radius: 20px;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.10);
+
+    box-shadow:
+        0 0 30px
+        rgba(180,0,0,0.25);
+
+}
+
+.logo-title {
+
+    margin-top: 13px;
+
+    font-size: 23px;
+
+    font-weight: 800;
+
+}
+
+.logo-subtitle {
+
+    margin-top: 6px;
+
+    color: #888;
+
+    font-size: 13px;
+
+}
+
+
+/* ===============================
+   TITLE
+=============================== */
+
+h1 {
+
+    margin:
+        0 0 22px;
+
+    text-align: center;
+
+    font-size: 22px;
+
+}
+
+
+/* ===============================
+   INPUT
+=============================== */
+
+.input-group {
+
+    width: 100%;
+
+    margin-bottom: 15px;
+
+}
+
+label {
+
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #bcbcbc;
+
+    font-size: 13px;
+
+}
+
+input {
+
+    width: 100%;
+
+    height: 48px;
+
+    padding:
+        0 14px;
+
+    border-radius: 12px;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.09);
+
+    outline: none;
+
+    background:
+        rgba(0,0,0,0.30);
+
+    color: #fff;
+
+    font-size: 14px;
+
+    direction: ltr;
+
+    text-align: left;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+
+}
+
+input:focus {
+
+    border-color:
+        #a00000;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(160,0,0,0.13);
+
+}
+
+
+/* ===============================
+   REGISTER BUTTON
+=============================== */
+
+.register-button {
+
+    width: 100%;
+
+    height: 48px;
+
+    margin-top: 4px;
+
+    border: 0;
+
+    border-radius: 12px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #750000,
+            #b00000
+        );
+
+    color: #fff;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.2s ease;
+
+}
+
+.register-button:hover {
+
+    box-shadow:
+        0 8px 25px
+        rgba(180,0,0,0.25);
+
+}
+
+.register-button:active {
+
+    transform:
+        scale(0.97);
+
+}
+
+.register-button:disabled {
+
+    opacity: 0.55;
+
+    cursor:
+        not-allowed;
+
+}
+
+
+/* ===============================
+   DIVIDER
+=============================== */
+
+.divider {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+
+    margin:
+        21px 0;
+
+    color: #626262;
+
+    font-size: 12px;
+
+}
+
+.divider::before,
+.divider::after {
+
+    content: "";
+
+    flex: 1;
+
+    height: 1px;
+
+    background:
+        rgba(255,255,255,0.08);
+
+}
+
+
+/* ===============================
+   SOCIAL BUTTONS
+=============================== */
+
+.social-buttons {
+
+    display: grid;
+
+    gap: 10px;
+
+}
+
+
+/* ===============================
+   SOCIAL BUTTON
+=============================== */
+
+.social-button {
+
+    width: 100%;
+
+    height: 48px;
+
+    padding:
+        0 15px;
+
+    border-radius: 12px;
+
+    border:
+        1px solid
+        rgba(255,255,255,0.10);
+
+    background:
+        rgba(255,255,255,0.035);
+
+    color: #fff;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    gap: 11px;
+
+    font-size: 14px;
+
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.18s ease,
+        box-shadow 0.2s ease;
+
+}
+
+.social-button:hover {
+
+    background:
+        rgba(255,255,255,0.065);
+
+    border-color:
+        rgba(255,255,255,0.16);
+
+    transform:
+        translateY(-1px);
+
+}
+
+.social-button:active {
+
+    transform:
+        scale(0.97);
+
+}
+
+.social-button:disabled {
+
+    opacity: 0.55;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
+}
+
+
+/* ===============================
+   SOCIAL ICON
+=============================== */
+
+.social-icon {
+
+    width: 21px;
+    height: 21px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    flex-shrink: 0;
+
+}
+
+.social-icon svg {
+
+    width: 21px;
+    height: 21px;
+
+    display: block;
+
+}
+
+
+/* ===============================
+   MESSAGE
+=============================== */
+
+.message {
+
+    min-height: 22px;
+
+    margin-top: 15px;
+
+    text-align: center;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+
+}
+
+.message.success {
+
+    color:
+        #7ff0bd;
+
+}
+
+.message.error {
+
+    color:
+        #ff8585;
+
+}
+
+
+/* ===============================
+   LOGIN LINK
+=============================== */
+
+.login-link {
+
+    margin-top: 20px;
+
+    text-align: center;
+
+    color: #777;
+
+    font-size: 13px;
+
+}
+
+.login-link a {
+
+    color:
+        #ff4444;
+
+    text-decoration:
+        none;
+
+    font-weight:
+        bold;
+
+}
+
+.login-link a:hover {
+
+    text-decoration:
+        underline;
+
+}
+
+
+/* ===============================
+   BACK
+=============================== */
+
+.back {
+
+    display: block;
+
+    margin-top: 16px;
+
+    text-align: center;
+
+    color: #555;
+
+    text-decoration:
+        none;
+
+    font-size: 12px;
+
+}
+
+.back:hover {
+
+    color: #aaa;
+
+}
+
+
+/* ===============================
+   MOBILE
+=============================== */
+
+@media (max-width: 480px) {
+
+    body {
+
+        padding: 14px;
+
+    }
+
+    .register-box {
+
+        padding: 20px;
+
+    }
+
+    .logo-area img {
+
+        width: 76px;
+        height: 76px;
+
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="register-box">
+
+
+    <!-- LOGO -->
+
+    <div class="logo-area">
+
+        <img
+            src="images/itachi_logo.png"
+            alt="ITACHI UCHIHA"
+        >
+
+        <div class="logo-title">
+            ARABIC_UCH_SD
+        </div>
+
+        <div class="logo-subtitle">
+            ITACHI ARABIC
+        </div>
+
+    </div>
+
+
+    <!-- TITLE -->
+
+    <h1>
+        إنشاء حساب
+    </h1>
+
+
+    <!-- REGISTER FORM -->
+
+    <form id="registerForm">
+
+
+        <div class="input-group">
+
+            <label for="email">
+                البريد الإلكتروني
+            </label>
+
+            <input
+                id="email"
+                type="email"
+                placeholder="example@email.com"
+                autocomplete="email"
+                required
+            >
+
+        </div>
+
+
+        <div class="input-group">
+
+            <label for="password">
+                كلمة المرور
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                placeholder="كلمة المرور"
+                autocomplete="new-password"
+                minlength="6"
+                required
+            >
+
+        </div>
+
+
+        <div class="input-group">
+
+            <label for="confirmPassword">
+                تأكيد كلمة المرور
+            </label>
+
+            <input
+                id="confirmPassword"
+                type="password"
+                placeholder="أعد كتابة كلمة المرور"
+                autocomplete="new-password"
+                minlength="6"
+                required
+            >
+
+        </div>
+
+
+        <button
+            id="registerButton"
+            class="register-button"
+            type="submit"
+        >
+            إنشاء الحساب
+        </button>
+
+
+    </form>
+
+
+    <!-- DIVIDER -->
+
+    <div class="divider">
+        أو المتابعة باستخدام
+    </div>
+
+
+    <!-- SOCIAL BUTTONS -->
+
+    <div class="social-buttons">
+
+
+        <!-- GOOGLE -->
+
+        <button
+            id="googleButton"
+            class="social-button"
+            type="button"
+        >
+
+            <span class="social-icon">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <path
+                        fill="#4285F4"
+                        d="M21.35 12.23c0-.74-.07-1.46-.21-2.14H12v4.05h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.3z"
+                    />
+
+                    <path
+                        fill="#34A853"
+                        d="M12 21.8c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.8z"
+                    />
+
+                    <path
+                        fill="#FBBC05"
+                        d="M6.54 13.88A5.86 5.86 0 0 1 6.23 12c0-.65.11-1.28.31-1.88V7.59H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.41l3.25-2.53z"
+                    />
+
+                    <path
+                        fill="#EA4335"
+                        d="M12 6.09c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.19 14.63 2.2 12 2.2a9.75 9.75 0 0 0-8.71 5.39l3.25 2.53C7.31 7.81 9.46 6.09 12 6.09z"
+                    />
+
+                </svg>
+
+            </span>
+
+            <span>
+                المتابعة باستخدام Google
+            </span>
+
+        </button>
+
+
+        <!-- DISCORD -->
+
+        <button
+            id="discordButton"
+            class="social-button"
+            type="button"
+        >
+
+            <span class="social-icon">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <path
+                        fill="#5865F2"
+                        d="M19.54 5.2A16.2 16.2 0 0 0 15.57 4l-.48.98a14.7 14.7 0 0 0-6.18 0L8.43 4a16.2 16.2 0 0 0-3.97 1.2C2.39 8.68 1.7 12.38 2.04 16.1a16.2 16.2 0 0 0 4.96 2.52l1.2-1.65a9.5 9.5 0 0 1-1.85-.9l.45-.35c3.47 1.62 7.67 1.62 11.1 0l.46.35c-.58.36-1.2.66-1.85.9l1.2 1.65a16.2 16.2 0 0 0 4.96-2.52c.4-4.3-.65-8.03-3.13-10.9z"
+                    />
+
+                    <circle
+                        cx="8.5"
+                        cy="12"
+                        r="1.25"
+                        fill="#050505"
+                    />
+
+                    <circle
+                        cx="15.5"
+                        cy="12"
+                        r="1.25"
+                        fill="#050505"
+                    />
+
+                </svg>
+
+            </span>
+
+            <span>
+                المتابعة باستخدام Discord
+            </span>
+
+        </button>
+
+
+        <!-- GITHUB -->
+
+        <button
+            id="githubButton"
+            class="social-button"
+            type="button"
+        >
+
+            <span class="social-icon">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                >
+
+                    <path
+                        fill="#ffffff"
+                        d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.22-3.37-1.22-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.52 1.06 1.52 1.06.9 1.57 2.35 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.02-2.75-.1-.26-.44-1.3.1-2.7 0 0 .83-.27 2.75 1.05a9.15 9.15 0 0 1 5 0c1.92-1.32 2.75-1.05 2.75-1.05.54 1.4.2 2.44.1 2.7.64.72 1.02 1.63 1.02 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"
+                    />
+
+                </svg>
+
+            </span>
+
+            <span>
+                المتابعة باستخدام GitHub
+            </span>
+
+        </button>
+
+
+    </div>
+
+
+    <!-- MESSAGE -->
+
+    <div
+        id="message"
+        class="message"
+    ></div>
+
+
+    <!-- LOGIN -->
+
+    <div class="login-link">
+
+        لديك حساب بالفعل؟
+
+        <a href="login.html">
+            تسجيل الدخول
+        </a>
+
+    </div>
+
+
+    <!-- HOME -->
+
+    <a
+        class="back"
+        href="/"
+    >
+        العودة إلى الرئيسية
+    </a>
+
+
+</div>
+
+
+<!-- SUPABASE -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+    "https://oqrdadmfpwgrfcphddbu.supabase.co";
+
+const SUPABASE_ANON_KEY =
+    "sb_publishable_gHcWL0VoJXUTL4JXGZilZA_na0KSJQZ";
+
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =====================================================
+   ELEMENTS
+===================================================== */
+
+const registerForm =
+    document.getElementById(
+        "registerForm"
+    );
+
+const emailInput =
+    document.getElementById(
+        "email"
+    );
+
+const passwordInput =
+    document.getElementById(
+        "password"
+    );
+
+const confirmPasswordInput =
+    document.getElementById(
+        "confirmPassword"
+    );
+
+const registerButton =
+    document.getElementById(
+        "registerButton"
+    );
+
+const googleButton =
+    document.getElementById(
+        "googleButton"
+    );
+
+const discordButton =
+    document.getElementById(
+        "discordButton"
+    );
+
+const githubButton =
+    document.getElementById(
+        "githubButton"
+    );
+
+const message =
+    document.getElementById(
+        "message"
+    );
+
+
+/* =====================================================
+   MESSAGE
+===================================================== */
+
+function showMessage(
+    text,
+    type
+) {
+
+    message.textContent =
+        text;
+
+    message.className =
+        "message " + type;
+
+}
+
+
+/* =====================================================
+   EMAIL REGISTER
+===================================================== */
+
+registerForm.addEventListener(
+    "submit",
+    async function(event) {
+
+        event.preventDefault();
+
+
+        const email =
+            emailInput.value.trim();
+
+        const password =
+            passwordInput.value;
+
+        const confirmPassword =
+            confirmPasswordInput.value;
+
+
+        if (
+            password !==
+            confirmPassword
+        ) {
+
+            showMessage(
+                "كلمتا المرور غير متطابقتين.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        if (password.length < 6) {
+
+            showMessage(
+                "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
+                "error"
+            );
+
+            return;
+
+        }
+
+
+        registerButton.disabled =
+            true;
+
+        registerButton.textContent =
+            "جاري إنشاء الحساب...";
+
+
+        showMessage(
+            "",
+            ""
+        );
+
+
+        try {
+
+            const {
+                data,
+                error
+            } =
+                await supabaseClient.auth.signUp({
+
+                    email:
+                        email,
+
+                    password:
+                        password,
+
+                    options: {
+
+                        emailRedirectTo:
+                            window.location.origin +
+                            "/login.html"
+
+                    }
+
+                });
+
+
+            if (error) {
+
+                console.error(
+                    "REGISTER ERROR:",
+                    error
+                );
+
+                showMessage(
+                    error.message ||
+                    "حدث خطأ أثناء إنشاء الحساب.",
+                    "error"
+                );
+
+                return;
+
+            }
+
+
+            if (
+                data.session &&
+                data.user
+            ) {
+
+                showMessage(
+                    "تم إنشاء الحساب بنجاح ✔️",
+                    "success"
+                );
+
+
+                setTimeout(
+                    function() {
+
+                        window.location.href =
+                            "/";
+
+                    },
+                    800
+                );
+
+            }
+
+            else {
+
+                showMessage(
+                    "تم إنشاء الحساب ✔️ تحقق من بريدك الإلكتروني لتأكيد الحساب.",
+                    "success"
+                );
+
+            }
+
+
+        }
+
+        catch(error) {
+
+            console.error(
+                "REGISTER ERROR:",
+                error
+            );
+
+            showMessage(
+                "حدث خطأ غير متوقع.",
+                "error"
+            );
+
+        }
+
+        finally {
+
+            registerButton.disabled =
+                false;
+
+            registerButton.textContent =
+                "إنشاء الحساب";
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   GOOGLE OAUTH
+===================================================== */
+
+googleButton.addEventListener(
+    "click",
+    function() {
+
+        startOAuth(
+            "google",
+            googleButton,
+            "Google"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   DISCORD OAUTH
+===================================================== */
+
+discordButton.addEventListener(
+    "click",
+    function() {
+
+        startOAuth(
+            "discord",
+            discordButton,
+            "Discord"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   GITHUB OAUTH
+===================================================== */
+
+githubButton.addEventListener(
+    "click",
+    function() {
+
+        startOAuth(
+            "github",
+            githubButton,
+            "GitHub"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   OAUTH FUNCTION
+===================================================== */
+
+async function startOAuth(
+    provider,
+    button,
+    providerName
+) {
+
+    button.disabled =
+        true;
+
+
+    button.dataset.originalText =
+        button.innerText;
+
+
+    button.innerHTML =
+        `
+        <span>
+            جاري فتح ${providerName}...
+        </span>
+        `;
+
+
+    showMessage(
+        "جاري فتح " +
+        providerName +
+        "...",
+        "success"
+    );
+
+
+    try {
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.auth.signInWithOAuth({
+
+                provider:
+                    provider,
+
+                options: {
+
+                    redirectTo:
+                        window.location.origin + "/"
+
+                }
+
+            });
+
+
+        if (error) {
+
+            console.error(
+                providerName +
+                " OAUTH ERROR:",
+                error
+            );
+
+            showMessage(
+                error.message ||
+                "تعذر فتح " +
+                providerName +
+                ".",
+                "error"
+            );
+
+            resetOAuthButton(
+                button
+            );
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.error(
+            providerName +
+            " OAUTH ERROR:",
+            error
+        );
+
+        showMessage(
+            "حدث خطأ أثناء فتح " +
+            providerName +
+            ".",
+            "error"
+        );
+
+        resetOAuthButton(
+            button
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   RESET OAUTH BUTTON
+===================================================== */
+
+function resetOAuthButton(
+    button
+) {
+
+    button.disabled =
+        false;
+
+    button.innerHTML =
+        `
+        <span class="social-icon">
+            ${getOriginalIcon(button.id)}
+        </span>
+
+        <span>
+            المتابعة باستخدام
+            ${getProviderName(button.id)}
+        </span>
+        `;
+
+}
+
+
+/* =====================================================
+   PROVIDER NAME
+===================================================== */
+
+function getProviderName(
+    buttonId
+) {
+
+    if (
+        buttonId ===
+        "googleButton"
+    ) {
+        return "Google";
+    }
+
+    if (
+        buttonId ===
+        "discordButton"
+    ) {
+        return "Discord";
+    }
+
+    if (
+        buttonId ===
+        "githubButton"
+    ) {
+        return "GitHub";
+    }
+
+    return "";
+
+}
+
+
+/* =====================================================
+   ORIGINAL ICONS
+===================================================== */
+
+function getOriginalIcon(
+    buttonId
+) {
+
+    if (
+        buttonId ===
+        "googleButton"
+    ) {
+
+        return `
+        <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
+                fill="#4285F4"
+                d="M21.35 12.23c0-.74-.07-1.46-.21-2.14H12v4.05h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.3z"
+            />
+            <path
+                fill="#34A853"
+                d="M12 21.8c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.8z"
+            />
+            <path
+                fill="#FBBC05"
+                d="M6.54 13.88A5.86 5.86 0 0 1 6.23 12c0-.65.11-1.28.31-1.88V7.59H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.41l3.25-2.53z"
+            />
+            <path
+                fill="#EA4335"
+                d="M12 6.09c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.19 14.63 2.2 12 2.2a9.75 9.75 0 0 0-8.71 5.39l3.25 2.53C7.31 7.81 9.46 6.09 12 6.09z"
+            />
+        </svg>
+        `;
+
+    }
+
+
+    if (
+        buttonId ===
+        "discordButton"
+    ) {
+
+        return `
+        <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
+                fill="#5865F2"
+                d="M19.54 5.2A16.2 16.2 0 0 0 15.57 4l-.48.98a14.7 14.7 0 0 0-6.18 0L8.43 4a16.2 16.2 0 0 0-3.97 1.2C2.39 8.68 1.7 12.38 2.04 16.1a16.2 16.2 0 0 0 4.96 2.52l1.2-1.65a9.5 9.5 0 0 1-1.85-.9l.45-.35c3.47 1.62 7.67 1.62 11.1 0l.46.35c-.58.36-1.2.66-1.85.9l1.2 1.65a16.2 16.2 0 0 0 4.96-2.52c.4-4.3-.65-8.03-3.13-10.9z"
+            />
+            <circle
+                cx="8.5"
+                cy="12"
+                r="1.25"
+                fill="#050505"
+            />
+            <circle
+                cx="15.5"
+                cy="12"
+                r="1.25"
+                fill="#050505"
+            />
+        </svg>
+        `;
+
+    }
+
+
+    if (
+        buttonId ===
+        "githubButton"
+    ) {
+
+        return `
+        <svg
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+        >
+            <path
+                fill="#ffffff"
+                d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.22-3.37-1.22-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.52 1.06 1.52 1.06.9 1.57 2.35 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.02-2.75-.1-.26-.44-1.3.1-2.7 0 0 .83-.27 2.75 1.05a9.15 9.15 0 0 1 5 0c1.92-1.32 2.75-1.05 2.75-1.05.54 1.4.2 2.44.1 2.7.64.72 1.02 1.63 1.02 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"
+            />
+        </svg>
+        `;
+
+    }
+
+
+    return "";
+
+}
+
+</script>
+
+
+</body>
+
+</html>
