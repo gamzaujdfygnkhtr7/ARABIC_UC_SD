@@ -10,7 +10,6 @@
         content="width=device-width, initial-scale=1.0"
     >
 
-    <!-- ملف الأنيميشن -->
     <link
         rel="stylesheet"
         href="animations.css"
@@ -30,10 +29,6 @@
             background: #050505;
             color: #fff;
         }
-
-        /* =========================
-           HEADER
-        ========================= */
 
         header {
             height: 65px;
@@ -129,10 +124,6 @@
             transform: scale(.96);
         }
 
-        /* =========================
-           MENU BUTTON
-        ========================= */
-
         .menu-button {
             width: 44px;
             height: 44px;
@@ -165,10 +156,6 @@
             height: 25px;
         }
 
-        /* =========================
-           OVERLAY
-        ========================= */
-
         .menu-overlay {
             position: fixed;
             inset: 0;
@@ -191,10 +178,6 @@
             opacity: 1;
             visibility: visible;
         }
-
-        /* =========================
-           SIDE MENU
-        ========================= */
 
         .side-menu {
             position: fixed;
@@ -241,10 +224,6 @@
         .side-menu.open {
             transform: translateX(0);
         }
-
-        /* =========================
-           MENU HEADER
-        ========================= */
 
         .menu-header {
             display: flex;
@@ -304,10 +283,6 @@
             font-size: 11px;
         }
 
-        /* =========================
-           CLOSE
-        ========================= */
-
         .close-button {
             width: 40px;
             height: 40px;
@@ -337,10 +312,6 @@
             width: 21px;
             height: 21px;
         }
-
-        /* =========================
-           MENU LINKS
-        ========================= */
 
         .menu-links {
             margin-top: 20px;
@@ -400,10 +371,6 @@
             flex-shrink: 0;
         }
 
-        /* =========================
-           SEPARATOR
-        ========================= */
-
         .menu-separator {
             width: 100%;
             height: 1px;
@@ -412,10 +379,6 @@
 
             margin: 13px 0;
         }
-
-        /* =========================
-           AUTH
-        ========================= */
 
         .auth-message {
             margin:
@@ -465,10 +428,6 @@
             background: #220909;
         }
 
-        /* =========================
-           MAIN
-        ========================= */
-
         .container {
             max-width: 850px;
 
@@ -482,10 +441,6 @@
 
             margin-bottom: 30px;
         }
-
-        /* =========================
-           TEXTAREA
-        ========================= */
 
         textarea {
             width: 100%;
@@ -517,10 +472,6 @@
                 0 0 0 2px
                 rgba(155,0,0,.15);
         }
-
-        /* =========================
-           LANGUAGES
-        ========================= */
 
         .languages {
             display: flex;
@@ -555,10 +506,6 @@
             border-color: #9b0000;
         }
 
-        /* =========================
-           SWAP
-        ========================= */
-
         .swap {
             width: 45px;
             height: 45px;
@@ -580,10 +527,6 @@
         .swap:hover {
             background: #240909;
         }
-
-        /* =========================
-           TRANSLATE
-        ========================= */
 
         .translate-btn {
             width: 100%;
@@ -612,10 +555,6 @@
             background: #b00000;
         }
 
-        /* =========================
-           RESULT
-        ========================= */
-
         .result-title {
             margin-bottom: 10px;
 
@@ -641,10 +580,6 @@
             white-space: pre-wrap;
         }
 
-        /* =========================
-           STATUS
-        ========================= */
-
         .status {
             text-align: center;
 
@@ -652,10 +587,6 @@
 
             color: #aa8888;
         }
-
-        /* =========================
-           MOBILE
-        ========================= */
 
         @media (max-width: 600px) {
 
@@ -792,15 +723,11 @@
 
 </header>
 
-<!-- OVERLAY -->
-
 <div
     id="menuOverlay"
     class="menu-overlay"
     onclick="closeMenu()"
 ></div>
-
-<!-- SIDE MENU -->
 
 <aside
     id="sideMenu"
@@ -919,6 +846,18 @@
             <span>الإعدادات</span>
         </button>
 
+        <!-- API: يظهر فقط بعد تسجيل الدخول -->
+
+        <button
+            id="apiMenuButton"
+            class="menu-link"
+            type="button"
+            onclick="protectedPage('api.html')"
+            style="display: none;"
+        >
+            <span>API</span>
+        </button>
+
         <div class="menu-separator"></div>
 
         <div id="authArea"></div>
@@ -926,8 +865,6 @@
     </div>
 
 </aside>
-
-<!-- MAIN -->
 
 <div class="container">
 
@@ -1001,10 +938,6 @@
     ></div>
 
 </div>
-
-<!-- =========================
-     BASIC SITE JAVASCRIPT
-========================= -->
 
 <script>
 
@@ -1155,11 +1088,23 @@ function buildAuthMenu() {
             "loginButton"
         );
 
+    const apiMenuButton =
+        document.getElementById(
+            "apiMenuButton"
+        );
+
     if (!authArea || !loginButton) {
         return;
     }
 
     if (isLoggedIn()) {
+
+        if (apiMenuButton) {
+
+            apiMenuButton.style.display =
+                "flex";
+
+        }
 
         loginButton.textContent =
             "حسابي";
@@ -1197,6 +1142,13 @@ function buildAuthMenu() {
         `;
 
     } else {
+
+        if (apiMenuButton) {
+
+            apiMenuButton.style.display =
+                "none";
+
+        }
 
         loginButton.textContent =
             "تسجيل الدخول";
@@ -1420,18 +1372,10 @@ buildAuthMenu();
 
 </script>
 
-<!-- =========================
-     SUPABASE
-========================= -->
-
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
     crossorigin="anonymous"
 ></script>
-
-<!-- =========================
-     AUTH.JS
-========================= -->
 
 <script>
 
@@ -1474,14 +1418,10 @@ window.addEventListener(
 
 </script>
 
-<!-- =========================
-     TRANSLATOR ENGINE
-========================= -->
-
 <script
     src="js/translator.js"
 ></script>
 
 </body>
 
-</html>
+     </html>
