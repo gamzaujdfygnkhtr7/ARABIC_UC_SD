@@ -5,12 +5,19 @@
 
 class TranslatorEngine {
 
-    constructor(dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv") {
+    constructor(
+        dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv"
+    ) {
+
         this.dictionaryUrl = dictionaryUrl;
+
         this.dictionary = new Map();
+
         this.loaded = false;
+
         this.loadingPromise = null;
     }
+
 
     /* =====================================================
        LOAD DICTIONARY
@@ -22,7 +29,6 @@ class TranslatorEngine {
             return;
         }
 
-        // Prevent multiple simultaneous downloads
         if (this.loadingPromise) {
             return this.loadingPromise;
         }
@@ -31,17 +37,35 @@ class TranslatorEngine {
 
             try {
 
-                const response = await fetch(this.dictionaryUrl, {
-                    cache: "no-cache"
-                });
+                console.log(
+                    "SOVT: Loading dictionary:",
+                    this.dictionaryUrl
+                );
+
+                const response = await fetch(
+                    this.dictionaryUrl,
+                    {
+                        cache: "no-cache"
+                    }
+                );
 
                 if (!response.ok) {
+
                     throw new Error(
-                        `تعذر تحميل ملف الترجمة (${response.status})`
+                        "HTTP " + response.status +
+                        " - تعذر تحميل ملف الترجمة"
                     );
                 }
 
-                const text = await response.text();
+                const text =
+                    await response.text();
+
+                if (!text.trim()) {
+
+                    throw new Error(
+                        "ملف القاموس فارغ"
+                    );
+                }
 
                 this.parseTSV(text);
 
@@ -60,12 +84,13 @@ class TranslatorEngine {
                     error
                 );
 
+                this.loaded = false;
+
                 throw error;
 
             } finally {
 
                 this.loadingPromise = null;
-
             }
 
         })();
@@ -80,11 +105,14 @@ class TranslatorEngine {
 
     normalize(text) {
 
-        if (typeof text !== "string") {
+        if (
+            typeof text !== "string"
+        ) {
             return "";
         }
 
         return text
+            .replace(/^\uFEFF/, "")
             .trim()
             .replace(/\s+/g, " ")
             .toLowerCase();
@@ -97,7 +125,10 @@ class TranslatorEngine {
 
     parseTSV(text) {
 
-        const lines = text.split(/\r?\n/);
+        const lines =
+            text.split(/\r?\n/);
+
+        let validEntries = 0;
 
         for (const line of lines) {
 
@@ -105,39 +136,55 @@ class TranslatorEngine {
                 continue;
             }
 
-            const separator = line.indexOf("\t");
+            const separator =
+                line.indexOf("\t");
 
             if (separator === -1) {
                 continue;
             }
 
-            const source = line
-                .slice(0, separator)
-                .trim();
+            const source =
+                line
+                    .slice(0, separator)
+                    .trim();
 
-            const target = line
-                .slice(separator + 1)
-                .trim();
+            const target =
+                line
+                    .slice(separator + 1)
+                    .trim();
 
-            if (!source || !target) {
+            if (
+                !source ||
+                !target
+            ) {
                 continue;
             }
 
-            const key = this.normalize(source);
+            const key =
+                this.normalize(source);
 
-            if (!this.dictionary.has(key)) {
+            if (
+                !this.dictionary.has(key)
+            ) {
 
                 this.dictionary.set(
                     key,
                     new Set()
                 );
-
             }
 
             this.dictionary
                 .get(key)
                 .add(target);
+
+            validEntries++;
         }
+
+        console.log(
+            "SOVT TSV parsed:",
+            validEntries,
+            "valid rows"
+        );
     }
 
 
@@ -147,13 +194,15 @@ class TranslatorEngine {
 
     findExact(text) {
 
-        const key = this.normalize(text);
+        const key =
+            this.normalize(text);
 
         if (!key) {
             return [];
         }
 
-        const results = this.dictionary.get(key);
+        const results =
+            this.dictionary.get(key);
 
         if (!results) {
             return [];
@@ -169,19 +218,17 @@ class TranslatorEngine {
 
     findParts(text) {
 
-        const normalized = this.normalize(text);
+        const normalized =
+            this.normalize(text);
 
         if (!normalized) {
             return [];
         }
 
-        const words = normalized.split(" ");
+        const words =
+            normalized.split(" ");
 
         const matches = [];
-
-        /*
-         * Search for the longest phrases first.
-         */
 
         for (
             let length = words.length;
@@ -195,12 +242,18 @@ class TranslatorEngine {
                 start++
             ) {
 
-                const phrase = words
-                    .slice(start, start + length)
-                    .join(" ");
+                const phrase =
+                    words
+                        .slice(
+                            start,
+                            start + length
+                        )
+                        .join(" ");
 
                 const results =
-                    this.dictionary.get(phrase);
+                    this.dictionary.get(
+                        phrase
+                    );
 
                 if (results) {
 
@@ -214,7 +267,6 @@ class TranslatorEngine {
                         start: start,
 
                         length: length
-
                     });
                 }
             }
@@ -228,7 +280,28 @@ class TranslatorEngine {
        TRANSLATE
        ===================================================== */
 
-    async translate(text, options = {}) {
+    async translate(
+        text,
+        options = {}
+    ) {
+
+        if (
+            typeof text !== "string" ||
+            !text.trim()
+        ) {
+
+            return {
+
+                success: false,
+
+                type: "empty",
+
+                source: text,
+
+                translations: []
+            };
+        }
+
 
         try {
 
@@ -246,34 +319,15 @@ class TranslatorEngine {
 
                 translations: [],
 
-                error: error.message
-
+                error:
+                    error.message
             };
         }
 
 
-        if (
-            typeof text !== "string" ||
-            !text.trim()
-        ) {
-
-            return {
-
-                success: false,
-
-                type: "empty",
-
-                source: text,
-
-                translations: []
-
-            };
-        }
-
-
-        /* =============================================
-           1. EXACT MATCH
-           ============================================= */
+        /* =================================================
+           EXACT MATCH
+           ================================================= */
 
         const exact =
             this.findExact(text);
@@ -291,14 +345,13 @@ class TranslatorEngine {
                 translations: exact,
 
                 needsExternalTranslation: false
-
             };
         }
 
 
-        /* =============================================
-           2. PARTIAL MATCH
-           ============================================= */
+        /* =================================================
+           PARTIAL MATCH
+           ================================================= */
 
         const parts =
             this.findParts(text);
@@ -316,14 +369,13 @@ class TranslatorEngine {
                 translations: parts,
 
                 needsExternalTranslation: true
-
             };
         }
 
 
-        /* =============================================
-           3. UNKNOWN
-           ============================================= */
+        /* =================================================
+           UNKNOWN
+           ================================================= */
 
         return {
 
@@ -336,9 +388,7 @@ class TranslatorEngine {
             translations: [],
 
             needsExternalTranslation: true
-
         };
-
     }
 
 
@@ -349,7 +399,6 @@ class TranslatorEngine {
     getSize() {
 
         return this.dictionary.size;
-
     }
 
 
@@ -359,10 +408,10 @@ class TranslatorEngine {
 
     has(text) {
 
-        const key = this.normalize(text);
+        const key =
+            this.normalize(text);
 
         return this.dictionary.has(key);
-
     }
 
 
@@ -376,8 +425,8 @@ class TranslatorEngine {
 
         this.loaded = false;
 
+        this.loadingPromise = null;
     }
-
 }
 
 
@@ -385,41 +434,65 @@ class TranslatorEngine {
    CREATE SOVT TRANSLATOR
    ========================================================= */
 
-const translator = new TranslatorEngine(
-    "./data/ITACHI_DICTIONARY.tsv"
-);
+const translator =
+    new TranslatorEngine(
+        "./data/ITACHI_DICTIONARY.tsv"
+    );
 
 
 /* =========================================================
    GLOBAL ACCESS
    ========================================================= */
 
-window.TranslatorEngine = TranslatorEngine;
+window.TranslatorEngine =
+    TranslatorEngine;
 
-window.translator = translator;
+window.translator =
+    translator;
 
 
 /* =========================================================
-   OPTIONAL AUTO LOAD
+   AUTO LOAD
    ========================================================= */
 
-window.addEventListener("DOMContentLoaded", async () => {
+window.addEventListener(
+    "DOMContentLoaded",
+    async () => {
 
-    try {
+        try {
 
-        await translator.load();
+            await translator.load();
 
-        console.log(
-            "SOVT Translator ready."
-        );
+            console.log(
+                "SOVT Translator ready."
+            );
 
-    } catch (error) {
+            console.log(
+                "Dictionary size:",
+                translator.getSize()
+            );
 
-        console.error(
-            "SOVT Translator failed to load:",
-            error
-        );
 
+            /* =============================================
+               DIRECT TEST
+               ============================================= */
+
+            console.log(
+                'Test "Hello":',
+                translator.findExact("Hello")
+            );
+
+            console.log(
+                'Test "أهلا":',
+                translator.findExact("أهلا")
+            );
+
+        } catch (error) {
+
+            console.error(
+                "SOVT Translator failed to load:",
+                error
+            );
+        }
     }
-
-});
+);
