@@ -846,8 +846,6 @@
             <span>الإعدادات</span>
         </button>
 
-        <!-- API: يظهر فقط بعد تسجيل الدخول -->
-
         <button
             id="apiMenuButton"
             class="menu-link"
@@ -1226,32 +1224,27 @@ function swapLanguages() {
 }
 
 
+/* =========================================================
+   SOVT TRANSLATION ENGINE
+   يستخدم js/translator.js + data/ITACHI_DICTIONARY.tsv
+========================================================= */
+
 async function translateText() {
 
     const textElement =
-        document.getElementById(
-            "text"
-        );
+        document.getElementById("text");
 
     const sourceElement =
-        document.getElementById(
-            "source"
-        );
+        document.getElementById("source");
 
     const targetElement =
-        document.getElementById(
-            "target"
-        );
+        document.getElementById("target");
 
     const result =
-        document.getElementById(
-            "result"
-        );
+        document.getElementById("result");
 
     const status =
-        document.getElementById(
-            "status"
-        );
+        document.getElementById("status");
 
     if (
         !textElement ||
@@ -1281,7 +1274,6 @@ async function translateText() {
             "";
 
         return;
-
     }
 
     result.textContent =
@@ -1292,64 +1284,96 @@ async function translateText() {
 
     try {
 
-        const response =
-            await fetch(
-                "/translate",
-                {
-                    method: "POST",
+        /* التأكد من تحميل محرك الترجمة */
 
-                    headers: {
-                        "Content-Type":
-                            "application/json"
-                    },
+        if (
+            !window.translator ||
+            typeof window.translator.translate !== "function"
+        ) {
 
-                    body:
-                        JSON.stringify({
-                            text: text,
-                            source: source,
-                            target: target,
-                            website: true
-                        })
-                }
-            );
-
-        if (!response.ok) {
             throw new Error(
-                "HTTP " + response.status
+                "Translator engine is not loaded."
             );
+
         }
 
+        /*
+         * الترجمة من القاموس المحلي.
+         *
+         * لا يوجد fetch إلى /translate.
+         * لا يوجد API خارجي.
+         */
+
         const data =
-            await response.json();
+            await window.translator.translate(text);
 
         if (data.success) {
 
-            result.textContent =
-                data.translation || "";
+            if (data.type === "exact") {
 
-            status.textContent =
-                "تمت الترجمة";
+                result.textContent =
+                    data.translations.join(" / ");
 
-        } else {
+                status.textContent =
+                    "تمت الترجمة من قاموس SOVT";
 
-            result.textContent =
-                data.message ||
-                "حدث خطأ أثناء الترجمة.";
+            }
 
-            status.textContent =
-                "فشلت الترجمة";
+            else if (data.type === "partial") {
+
+                const translations =
+                    data.translations
+                        .map(function (item) {
+
+                            return item.translations.join(" / ");
+
+                        })
+                        .join(" | ");
+
+                result.textContent =
+                    translations;
+
+                status.textContent =
+                    "تم العثور على أجزاء من النص";
+
+            }
+
+            else {
+
+                result.textContent =
+                    "لم نجد ترجمة لهذا النص في قاموس SOVT.";
+
+                status.textContent =
+                    "غير موجود";
+
+            }
 
         }
 
-    } catch (error) {
+        else {
 
-        console.error(error);
+            result.textContent =
+                "لم نجد ترجمة لهذا النص في قاموس SOVT.";
+
+            status.textContent =
+                "غير موجود";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.error(
+            "SOVT Translation Error:",
+            error
+        );
 
         result.textContent =
-            "تعذر الاتصال بالـ API.";
+            "تعذر تحميل نظام الترجمة.";
 
         status.textContent =
-            "Server Error";
+            "Translation Error";
 
     }
 
@@ -1361,7 +1385,9 @@ document.addEventListener(
     function (event) {
 
         if (event.key === "Escape") {
+
             closeMenu();
+
         }
 
     }
@@ -1372,10 +1398,20 @@ buildAuthMenu();
 
 </script>
 
+
+<!-- =========================
+     SUPABASE
+========================= -->
+
 <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
     crossorigin="anonymous"
 ></script>
+
+
+<!-- =========================
+     AUTH.JS
+========================= -->
 
 <script>
 
@@ -1418,10 +1454,15 @@ window.addEventListener(
 
 </script>
 
+
+<!-- =========================
+     SOVT TRANSLATOR
+========================= -->
+
 <script
     src="js/translator.js"
 ></script>
 
 </body>
 
-     </html>
+    </html>
