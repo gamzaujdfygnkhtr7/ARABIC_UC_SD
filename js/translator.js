@@ -682,7 +682,7 @@ class TranslatorEngine {
 
 const translator =
     new TranslatorEngine(
-        "./data/ITACHI_DICTIONARY.tsv"
+        "./Data/ITACHI_DICTIONARY.tsv"
     );
 
 
