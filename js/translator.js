@@ -1,20 +1,22 @@
 /* =========================================================
    SOVT TRANSLATOR ENGINE
-   Dictionary-based translation engine
+   Dictionary-based translation
+   AR <-> EN
    ========================================================= */
 
 class TranslatorEngine {
 
-    constructor(
-        dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv"
-    ) {
+    constructor(dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv") {
 
         this.dictionaryUrl = dictionaryUrl;
 
-        this.dictionary = new Map();
+        // ar -> en
+        this.arToEn = new Map();
+
+        // en -> ar
+        this.enToAr = new Map();
 
         this.loaded = false;
-
         this.loadingPromise = null;
     }
 
@@ -52,13 +54,13 @@ class TranslatorEngine {
                 if (!response.ok) {
 
                     throw new Error(
-                        "HTTP " + response.status +
-                        " - تعذر تحميل ملف الترجمة"
+                        "HTTP " +
+                        response.status +
+                        " - تعذر تحميل ملف القاموس"
                     );
                 }
 
-                const text =
-                    await response.text();
+                const text = await response.text();
 
                 if (!text.trim()) {
 
@@ -72,19 +74,27 @@ class TranslatorEngine {
                 this.loaded = true;
 
                 console.log(
-                    "SOVT dictionary loaded:",
-                    this.dictionary.size,
-                    "entries"
+                    "SOVT dictionary loaded."
+                );
+
+                console.log(
+                    "AR -> EN:",
+                    this.arToEn.size
+                );
+
+                console.log(
+                    "EN -> AR:",
+                    this.enToAr.size
                 );
 
             } catch (error) {
+
+                this.loaded = false;
 
                 console.error(
                     "SOVT Translator Error:",
                     error
                 );
-
-                this.loaded = false;
 
                 throw error;
 
@@ -100,19 +110,18 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       NORMALIZE TEXT
+       NORMALIZE
        ===================================================== */
 
     normalize(text) {
 
-        if (
-            typeof text !== "string"
-        ) {
+        if (typeof text !== "string") {
             return "";
         }
 
         return text
             .replace(/^\uFEFF/, "")
+            .replace(/\r/g, "")
             .trim()
             .replace(/\s+/g, " ")
             .toLowerCase();
@@ -120,15 +129,51 @@ class TranslatorEngine {
 
 
     /* =====================================================
+       ADD ENTRY
+       ===================================================== */
+
+    addEntry(map, source, target) {
+
+        const key = this.normalize(source);
+
+        if (!key || !target) {
+            return;
+        }
+
+        if (!map.has(key)) {
+
+            map.set(
+                key,
+                new Set()
+            );
+        }
+
+        map
+            .get(key)
+            .add(target.trim());
+    }
+
+
+    /* =====================================================
        PARSE TSV
+       
+       القاموس عندك بهذا الشكل:
+
+       أهلا        Hello
+       Hello       أهلا
+
+       لذلك نقرأ الاتجاهين تلقائيًا.
        ===================================================== */
 
     parseTSV(text) {
 
+        this.arToEn.clear();
+        this.enToAr.clear();
+
         const lines =
             text.split(/\r?\n/);
 
-        let validEntries = 0;
+        let rows = 0;
 
         for (const line of lines) {
 
@@ -143,48 +188,115 @@ class TranslatorEngine {
                 continue;
             }
 
-            const source =
+            const col1 =
                 line
                     .slice(0, separator)
                     .trim();
 
-            const target =
+            const col2 =
                 line
                     .slice(separator + 1)
                     .trim();
 
-            if (
-                !source ||
-                !target
-            ) {
+            if (!col1 || !col2) {
                 continue;
             }
 
-            const key =
-                this.normalize(source);
+            /*
+             * إذا كان العمود الأول عربي:
+             *
+             * عربي -> إنجليزي
+             */
 
-            if (
-                !this.dictionary.has(key)
-            ) {
+            if (this.isArabic(col1)) {
 
-                this.dictionary.set(
-                    key,
-                    new Set()
+                this.addEntry(
+                    this.arToEn,
+                    col1,
+                    col2
+                );
+
+                /*
+                 * ونضيف الاتجاه العكسي أيضًا
+                 */
+
+                this.addEntry(
+                    this.enToAr,
+                    col2,
+                    col1
+                );
+
+            }
+
+            /*
+             * إذا كان العمود الأول إنجليزي:
+             *
+             * إنجليزي -> عربي
+             */
+
+            else {
+
+                this.addEntry(
+                    this.enToAr,
+                    col1,
+                    col2
+                );
+
+                /*
+                 * الاتجاه العكسي
+                 */
+
+                this.addEntry(
+                    this.arToEn,
+                    col2,
+                    col1
                 );
             }
 
-            this.dictionary
-                .get(key)
-                .add(target);
-
-            validEntries++;
+            rows++;
         }
 
         console.log(
             "SOVT TSV parsed:",
-            validEntries,
-            "valid rows"
+            rows,
+            "rows"
         );
+    }
+
+
+    /* =====================================================
+       DETECT ARABIC
+       ===================================================== */
+
+    isArabic(text) {
+
+        return /[\u0600-\u06FF]/.test(text);
+    }
+
+
+    /* =====================================================
+       GET MAP
+       ===================================================== */
+
+    getMap(source, target) {
+
+        if (
+            source === "ar" &&
+            target === "en"
+        ) {
+
+            return this.arToEn;
+        }
+
+        if (
+            source === "en" &&
+            target === "ar"
+        ) {
+
+            return this.enToAr;
+        }
+
+        return null;
     }
 
 
@@ -192,7 +304,21 @@ class TranslatorEngine {
        EXACT SEARCH
        ===================================================== */
 
-    findExact(text) {
+    findExact(
+        text,
+        source = "ar",
+        target = "en"
+    ) {
+
+        const map =
+            this.getMap(
+                source,
+                target
+            );
+
+        if (!map) {
+            return [];
+        }
 
         const key =
             this.normalize(text);
@@ -202,7 +328,7 @@ class TranslatorEngine {
         }
 
         const results =
-            this.dictionary.get(key);
+            map.get(key);
 
         if (!results) {
             return [];
@@ -213,66 +339,121 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       WORD / PHRASE SEARCH
+       PARTIAL TRANSLATION
        ===================================================== */
 
-    findParts(text) {
+    translateParts(
+        text,
+        source,
+        target
+    ) {
+
+        const map =
+            this.getMap(
+                source,
+                target
+            );
+
+        if (!map) {
+            return null;
+        }
 
         const normalized =
             this.normalize(text);
 
         if (!normalized) {
-            return [];
+            return null;
         }
 
         const words =
             normalized.split(" ");
 
-        const matches = [];
+        const output = [];
 
-        for (
-            let length = words.length;
-            length >= 1;
-            length--
-        ) {
+        let i = 0;
+
+        while (i < words.length) {
+
+            let found = false;
+
+            /*
+             * نبحث عن أطول عبارة أولًا.
+             *
+             * مثال:
+             *
+             * How are you
+             *
+             * بدل:
+             * How
+             * are
+             * you
+             */
 
             for (
-                let start = 0;
-                start + length <= words.length;
-                start++
+                let length = words.length - i;
+                length >= 1;
+                length--
             ) {
 
                 const phrase =
                     words
                         .slice(
-                            start,
-                            start + length
+                            i,
+                            i + length
                         )
                         .join(" ");
 
-                const results =
-                    this.dictionary.get(
-                        phrase
+                const result =
+                    map.get(phrase);
+
+                if (result) {
+
+                    const translations =
+                        Array.from(result);
+
+                    output.push(
+                        translations[0]
                     );
 
-                if (results) {
+                    i += length;
 
-                    matches.push({
+                    found = true;
 
-                        phrase: phrase,
-
-                        translations:
-                            Array.from(results),
-
-                        start: start,
-
-                        length: length
-                    });
+                    break;
                 }
+            }
+
+            /*
+             * الكلمة غير موجودة.
+             *
+             * نحافظ عليها بدل حذفها.
+             */
+
+            if (!found) {
+
+                output.push(
+                    words[i]
+                );
+
+                i++;
             }
         }
 
-        return matches;
+        /*
+         * إذا لم نجد أي ترجمة فعلية
+         */
+
+        if (
+            output.every(
+                (word, index) =>
+                    word === words[index]
+            )
+        ) {
+
+            return null;
+        }
+
+        return output.join(" ");
     }
 
 
@@ -325,12 +506,48 @@ class TranslatorEngine {
         }
 
 
+        /*
+         * اللغة الافتراضية
+         */
+
+        const source =
+            options.source || "ar";
+
+        const target =
+            options.target || "en";
+
+
+        /*
+         * نفس اللغة
+         */
+
+        if (source === target) {
+
+            return {
+
+                success: true,
+
+                type: "same_language",
+
+                source: text,
+
+                translations: [text],
+
+                translation: text
+            };
+        }
+
+
         /* =================================================
            EXACT MATCH
            ================================================= */
 
         const exact =
-            this.findExact(text);
+            this.findExact(
+                text,
+                source,
+                target
+            );
 
         if (exact.length > 0) {
 
@@ -344,6 +561,8 @@ class TranslatorEngine {
 
                 translations: exact,
 
+                translation: exact[0],
+
                 needsExternalTranslation: false
             };
         }
@@ -353,10 +572,14 @@ class TranslatorEngine {
            PARTIAL MATCH
            ================================================= */
 
-        const parts =
-            this.findParts(text);
+        const partial =
+            this.translateParts(
+                text,
+                source,
+                target
+            );
 
-        if (parts.length > 0) {
+        if (partial) {
 
             return {
 
@@ -366,9 +589,11 @@ class TranslatorEngine {
 
                 source: text,
 
-                translations: parts,
+                translations: [partial],
 
-                needsExternalTranslation: true
+                translation: partial,
+
+                needsExternalTranslation: false
             };
         }
 
@@ -387,51 +612,72 @@ class TranslatorEngine {
 
             translations: [],
 
-            needsExternalTranslation: true
+            translation: "",
+
+            needsExternalTranslation: true,
+
+            message:
+                "لم نجد ترجمة لهذا النص في قاموس SOVT."
         };
     }
 
 
     /* =====================================================
-       GET DICTIONARY SIZE
+       DICTIONARY SIZE
        ===================================================== */
 
     getSize() {
 
-        return this.dictionary.size;
+        return (
+            this.arToEn.size +
+            this.enToAr.size
+        );
     }
 
 
     /* =====================================================
-       CHECK IF WORD EXISTS
+       CHECK WORD
        ===================================================== */
 
-    has(text) {
+    has(
+        text,
+        source = "ar",
+        target = "en"
+    ) {
 
-        const key =
-            this.normalize(text);
+        const map =
+            this.getMap(
+                source,
+                target
+            );
 
-        return this.dictionary.has(key);
+        if (!map) {
+            return false;
+        }
+
+        return map.has(
+            this.normalize(text)
+        );
     }
 
 
     /* =====================================================
-       CLEAR DICTIONARY
+       CLEAR
        ===================================================== */
 
     clear() {
 
-        this.dictionary.clear();
+        this.arToEn.clear();
+        this.enToAr.clear();
 
         this.loaded = false;
-
         this.loadingPromise = null;
     }
 }
 
 
 /* =========================================================
-   CREATE SOVT TRANSLATOR
+   CREATE TRANSLATOR
    ========================================================= */
 
 const translator =
@@ -441,7 +687,7 @@ const translator =
 
 
 /* =========================================================
-   GLOBAL ACCESS
+   GLOBAL
    ========================================================= */
 
 window.TranslatorEngine =
@@ -467,24 +713,37 @@ window.addEventListener(
                 "SOVT Translator ready."
             );
 
+            /*
+             * اختبارات مباشرة في Console
+             */
+
             console.log(
-                "Dictionary size:",
-                translator.getSize()
+                'SOVT TEST AR -> EN:',
+                translator.findExact(
+                    "أهلا",
+                    "ar",
+                    "en"
+                )
             );
 
-
-            /* =============================================
-               DIRECT TEST
-               ============================================= */
-
             console.log(
-                'Test "Hello":',
-                translator.findExact("Hello")
+                'SOVT TEST EN -> AR:',
+                translator.findExact(
+                    "Hello",
+                    "en",
+                    "ar"
+                )
             );
 
             console.log(
-                'Test "أهلا":',
-                translator.findExact("أهلا")
+                'SOVT TEST:',
+                await translator.translate(
+                    "صباح الخير",
+                    {
+                        source: "ar",
+                        target: "en"
+                    }
+                )
             );
 
         } catch (error) {
