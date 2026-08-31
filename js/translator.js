@@ -1,6 +1,6 @@
 /* =========================================================
-   SOVT TRANSLATOR ENGINE V1
-   Dictionary + SOVT Model
+   SOVT TRANSLATOR ENGINE V1.1
+   Dictionary + Smart Arabic Normalization
    ========================================================= */
 
 class TranslatorEngine {
@@ -80,12 +80,12 @@ class TranslatorEngine {
 
             } catch (error) {
 
+                this.loaded = false;
+
                 console.error(
                     "SOVT Translator Error:",
                     error
                 );
-
-                this.loaded = false;
 
                 throw error;
 
@@ -101,7 +101,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       NORMALIZE
+       NORMALIZE TEXT
        ===================================================== */
 
     normalize(text) {
@@ -112,11 +112,58 @@ class TranslatorEngine {
             return "";
         }
 
-        return text
-            .replace(/^\uFEFF/, "")
-            .trim()
-            .replace(/\s+/g, " ")
-            .toLowerCase();
+        let value = text;
+
+        /* إزالة BOM */
+        value = value.replace(/^\uFEFF/, "");
+
+        /* إزالة المسافات الزائدة */
+        value = value.trim();
+
+        value = value.replace(/\s+/g, " ");
+
+        /*
+         * توحيد بعض أشكال الحروف العربية
+         */
+
+        value = value
+            .replace(/[إأآٱ]/g, "ا")
+            .replace(/ى/g, "ي")
+            .replace(/ؤ/g, "و")
+            .replace(/ئ/g, "ي");
+
+        /*
+         * إزالة التشكيل العربي
+         */
+
+        value = value.replace(
+            /[\u064B-\u065F\u0670]/g,
+            ""
+        );
+
+        /*
+         * معالجة التطويل:
+         *
+         * هلاااااااا → هلا
+         * لاااااا → لا
+         * اهلااا → اهلا
+         *
+         * نسمح بتكرار الحرف مرتين فقط،
+         * ثم نحذف التكرار الزائد.
+         */
+
+        value = value.replace(
+            /([\u0600-\u06FF])\1{2,}/g,
+            "$1"
+        );
+
+        /*
+         * الإنجليزية غير حساسة لحالة الأحرف
+         */
+
+        value = value.toLowerCase();
+
+        return value;
     }
 
 
@@ -125,6 +172,8 @@ class TranslatorEngine {
        ===================================================== */
 
     parseTSV(text) {
+
+        this.dictionary.clear();
 
         const lines =
             text.split(/\r?\n/);
@@ -163,6 +212,10 @@ class TranslatorEngine {
 
             const key =
                 this.normalize(source);
+
+            if (!key) {
+                continue;
+            }
 
             if (
                 !this.dictionary.has(key)
@@ -214,44 +267,61 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       SOVT MODEL SEARCH
+       SMART SEARCH
        ===================================================== */
 
-    findWithModel(text) {
+    findSmart(text) {
 
-        if (
-            !window.sovtModel ||
-            typeof window.sovtModel.createVariants !==
-                "function"
-        ) {
+        const original =
+            this.normalize(text);
 
-            return null;
+        if (!original) {
+            return [];
         }
 
-        const variants =
-            window.sovtModel.createVariants(
-                text
+        /*
+         * المحاولة الأولى:
+         * النص بعد التطبيع
+         */
+
+        let results =
+            this.dictionary.get(original);
+
+        if (results) {
+
+            return Array.from(results);
+        }
+
+        /*
+         * محاولة إزالة تكرار الحروف
+         * بشكل تدريجي.
+         *
+         * مثال:
+         *
+         * هلاااااا
+         *
+         * ↓
+         *
+         * هلا
+         */
+
+        let simplified =
+            original.replace(
+                /([\u0600-\u06FF])\1+/g,
+                "$1"
             );
 
-        for (const variant of variants) {
+        results =
+            this.dictionary.get(
+                simplified
+            );
 
-            const results =
-                this.findExact(variant);
+        if (results) {
 
-            if (results.length > 0) {
-
-                return {
-
-                    variant:
-                        variant,
-
-                    translations:
-                        results
-                };
-            }
+            return Array.from(results);
         }
 
-        return null;
+        return [];
     }
 
 
@@ -273,6 +343,9 @@ class TranslatorEngine {
 
         const matches = [];
 
+        /*
+         * البحث عن أطول عبارة أولًا
+         */
 
         for (
             let length = words.length;
@@ -295,11 +368,11 @@ class TranslatorEngine {
                         .join(" ");
 
                 const results =
-                    this.dictionary.get(
-                        phrase
-                    );
+                    this.findSmart(phrase);
 
-                if (results) {
+                if (
+                    results.length > 0
+                ) {
 
                     matches.push({
 
@@ -307,7 +380,7 @@ class TranslatorEngine {
                             phrase,
 
                         translations:
-                            Array.from(results),
+                            results,
 
                         start:
                             start,
@@ -383,11 +456,11 @@ class TranslatorEngine {
 
 
         /* =================================================
-           1. EXACT MATCH
+           1. SMART EXACT MATCH
            ================================================= */
 
         const exact =
-            this.findExact(text);
+            this.findSmart(text);
 
         if (
             exact.length > 0
@@ -414,48 +487,7 @@ class TranslatorEngine {
 
 
         /* =================================================
-           2. SOVT MODEL
-           
-           مثال:
-           لاااااا
-           ↓
-           لا
-           ↓
-           قاموس
-           ↓
-           No
-           ================================================= */
-
-        const modelResult =
-            this.findWithModel(text);
-
-        if (modelResult) {
-
-            return {
-
-                success:
-                    true,
-
-                type:
-                    "model",
-
-                source:
-                    text,
-
-                normalized:
-                    modelResult.variant,
-
-                translations:
-                    modelResult.translations,
-
-                needsExternalTranslation:
-                    false
-            };
-        }
-
-
-        /* =================================================
-           3. PARTIAL MATCH
+           2. PARTIAL MATCH
            ================================================= */
 
         const parts =
@@ -486,7 +518,7 @@ class TranslatorEngine {
 
 
         /* =================================================
-           4. UNKNOWN
+           3. UNKNOWN
            ================================================= */
 
         return {
@@ -525,11 +557,8 @@ class TranslatorEngine {
 
     has(text) {
 
-        const key =
-            this.normalize(text);
-
-        return this.dictionary.has(
-            key
+        return (
+            this.findSmart(text).length > 0
         );
     }
 
@@ -550,7 +579,7 @@ class TranslatorEngine {
 
 
 /* =========================================================
-   CREATE TRANSLATOR
+   CREATE SOVT TRANSLATOR
    ========================================================= */
 
 const translator =
@@ -583,7 +612,7 @@ window.addEventListener(
             await translator.load();
 
             console.log(
-                "SOVT Translator ready."
+                "SOVT Translator V1.1 ready."
             );
 
             console.log(
@@ -596,25 +625,22 @@ window.addEventListener(
 
             console.log(
                 'SOVT Test "Hello":',
-                translator.findExact(
-                    "Hello"
-                )
+                translator.findSmart("Hello")
             );
 
             console.log(
-                'SOVT Test "أهلا":',
-                translator.findExact(
-                    "أهلا"
-                )
+                'SOVT Test "هلا":',
+                translator.findSmart("هلا")
             );
 
             console.log(
-                'SOVT Model Test "لاااا":',
-                window.sovtModel
-                    ? window.sovtModel.process(
-                        "لاااا"
-                    )
-                    : "Model not loaded"
+                'SOVT Test "هلااااا":',
+                translator.findSmart("هلااااا")
+            );
+
+            console.log(
+                'SOVT Test "لااااا":',
+                translator.findSmart("لااااا")
             );
 
         } catch (error) {
