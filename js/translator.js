@@ -1,6 +1,7 @@
 /* =========================================================
-   SOVT TRANSLATOR ENGINE V1.1
+   SOVT TRANSLATOR ENGINE V1.2
    Dictionary + Smart Arabic Normalization
+   + Google Translate Fallback
    ========================================================= */
 
 class TranslatorEngine {
@@ -42,12 +43,13 @@ class TranslatorEngine {
                     this.dictionaryUrl
                 );
 
-                const response = await fetch(
-                    this.dictionaryUrl,
-                    {
-                        cache: "no-cache"
-                    }
-                );
+                const response =
+                    await fetch(
+                        this.dictionaryUrl,
+                        {
+                            cache: "no-cache"
+                        }
+                    );
 
                 if (!response.ok) {
 
@@ -114,56 +116,59 @@ class TranslatorEngine {
 
         let value = text;
 
-        /* إزالة BOM */
-        value = value.replace(/^\uFEFF/, "");
+        value =
+            value.replace(
+                /^\uFEFF/,
+                ""
+            );
 
-        /* إزالة المسافات الزائدة */
-        value = value.trim();
+        value =
+            value.trim();
 
-        value = value.replace(/\s+/g, " ");
+        value =
+            value.replace(
+                /\s+/g,
+                " "
+            );
 
-        /*
-         * توحيد بعض أشكال الحروف العربية
-         */
+        value =
+            value
+                .replace(
+                    /[إأآٱ]/g,
+                    "ا"
+                )
+                .replace(
+                    /ى/g,
+                    "ي"
+                )
+                .replace(
+                    /ؤ/g,
+                    "و"
+                )
+                .replace(
+                    /ئ/g,
+                    "ي"
+                );
 
-        value = value
-            .replace(/[إأآٱ]/g, "ا")
-            .replace(/ى/g, "ي")
-            .replace(/ؤ/g, "و")
-            .replace(/ئ/g, "ي");
+        value =
+            value.replace(
+                /[\u064B-\u065F\u0670]/g,
+                ""
+            );
 
-        /*
-         * إزالة التشكيل العربي
-         */
+        value =
+            value.replace(
+                /ـ+/g,
+                ""
+            );
 
-        value = value.replace(
-            /[\u064B-\u065F\u0670]/g,
-            ""
-        );
+        value =
+            value.replace(
+                /([\u0600-\u06FF])\1{2,}/g,
+                "$1"
+            );
 
-        /*
-         * معالجة التطويل:
-         *
-         * هلاااااااا → هلا
-         * لاااااا → لا
-         * اهلااا → اهلا
-         *
-         * نسمح بتكرار الحرف مرتين فقط،
-         * ثم نحذف التكرار الزائد.
-         */
-
-        value = value.replace(
-            /([\u0600-\u06FF])\1{2,}/g,
-            "$1"
-        );
-
-        /*
-         * الإنجليزية غير حساسة لحالة الأحرف
-         */
-
-        value = value.toLowerCase();
-
-        return value;
+        return value.toLowerCase();
     }
 
 
@@ -195,12 +200,17 @@ class TranslatorEngine {
 
             const source =
                 line
-                    .slice(0, separator)
+                    .slice(
+                        0,
+                        separator
+                    )
                     .trim();
 
             const target =
                 line
-                    .slice(separator + 1)
+                    .slice(
+                        separator + 1
+                    )
                     .trim();
 
             if (
@@ -211,7 +221,9 @@ class TranslatorEngine {
             }
 
             const key =
-                this.normalize(source);
+                this.normalize(
+                    source
+                );
 
             if (!key) {
                 continue;
@@ -262,7 +274,9 @@ class TranslatorEngine {
             return [];
         }
 
-        return Array.from(results);
+        return Array.from(
+            results
+        );
     }
 
 
@@ -279,31 +293,17 @@ class TranslatorEngine {
             return [];
         }
 
-        /*
-         * المحاولة الأولى:
-         * النص بعد التطبيع
-         */
-
         let results =
-            this.dictionary.get(original);
+            this.dictionary.get(
+                original
+            );
 
         if (results) {
 
-            return Array.from(results);
+            return Array.from(
+                results
+            );
         }
-
-        /*
-         * محاولة إزالة تكرار الحروف
-         * بشكل تدريجي.
-         *
-         * مثال:
-         *
-         * هلاااااا
-         *
-         * ↓
-         *
-         * هلا
-         */
 
         let simplified =
             original.replace(
@@ -318,7 +318,9 @@ class TranslatorEngine {
 
         if (results) {
 
-            return Array.from(results);
+            return Array.from(
+                results
+            );
         }
 
         return [];
@@ -343,10 +345,6 @@ class TranslatorEngine {
 
         const matches = [];
 
-        /*
-         * البحث عن أطول عبارة أولًا
-         */
-
         for (
             let length = words.length;
             length >= 1;
@@ -368,7 +366,9 @@ class TranslatorEngine {
                         .join(" ");
 
                 const results =
-                    this.findSmart(phrase);
+                    this.findSmart(
+                        phrase
+                    );
 
                 if (
                     results.length > 0
@@ -397,6 +397,90 @@ class TranslatorEngine {
 
 
     /* =====================================================
+       GOOGLE TRANSLATE
+       ===================================================== */
+
+    async googleTranslate(
+        text,
+        source = "auto",
+        target = "en"
+    ) {
+
+        if (
+            !text ||
+            !target
+        ) {
+
+            throw new Error(
+                "نص أو لغة غير صحيحة"
+            );
+        }
+
+        const url =
+            "https://translate.googleapis.com/" +
+            "translate_a/single" +
+            "?client=gtx" +
+            "&sl=" +
+            encodeURIComponent(source) +
+            "&tl=" +
+            encodeURIComponent(target) +
+            "&dt=t" +
+            "&q=" +
+            encodeURIComponent(text);
+
+        const response =
+            await fetch(
+                url
+            );
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Google Translate HTTP " +
+                response.status
+            );
+        }
+
+        const data =
+            await response.json();
+
+        if (
+            !Array.isArray(data) ||
+            !Array.isArray(data[0])
+        ) {
+
+            throw new Error(
+                "استجابة Google Translate غير صالحة"
+            );
+        }
+
+        const translated =
+            data[0]
+                .map(function (part) {
+
+                    if (
+                        Array.isArray(part)
+                    ) {
+                        return part[0] || "";
+                    }
+
+                    return "";
+                })
+                .join("")
+                .trim();
+
+        if (!translated) {
+
+            throw new Error(
+                "Google لم يرجع ترجمة"
+            );
+        }
+
+        return translated;
+    }
+
+
+    /* =====================================================
        TRANSLATE
        ===================================================== */
 
@@ -412,22 +496,27 @@ class TranslatorEngine {
 
             return {
 
-                success:
-                    false,
+                success: false,
 
-                type:
-                    "empty",
+                type: "empty",
 
-                source:
-                    text,
+                source: text,
 
-                translations:
-                    []
+                translations: []
             };
         }
 
 
-        /* تحميل القاموس */
+        const source =
+            options.source || "auto";
+
+        const target =
+            options.target || "en";
+
+
+        /* ================================================
+           تحميل القاموس
+           ================================================ */
 
         try {
 
@@ -437,17 +526,15 @@ class TranslatorEngine {
 
             return {
 
-                success:
-                    false,
+                success: false,
 
-                type:
-                    "dictionary_error",
+                type: "dictionary_error",
 
-                source:
-                    text,
+                source: text,
 
-                translations:
-                    [],
+                translations: [],
+
+                needsExternalTranslation: true,
 
                 error:
                     error.message
@@ -455,9 +542,9 @@ class TranslatorEngine {
         }
 
 
-        /* =================================================
-           1. SMART EXACT MATCH
-           ================================================= */
+        /* ================================================
+           1. البحث الكامل
+           ================================================ */
 
         const exact =
             this.findSmart(text);
@@ -468,27 +555,24 @@ class TranslatorEngine {
 
             return {
 
-                success:
-                    true,
+                success: true,
 
-                type:
-                    "exact",
+                type: "exact",
 
-                source:
-                    text,
+                source: text,
 
-                translations:
-                    exact,
+                translations: exact,
 
-                needsExternalTranslation:
-                    false
+                needsExternalTranslation: false,
+
+                fromDictionary: true
             };
         }
 
 
-        /* =================================================
-           2. PARTIAL MATCH
-           ================================================= */
+        /* ================================================
+           2. البحث عن أجزاء
+           ================================================ */
 
         const parts =
             this.findParts(text);
@@ -497,47 +581,124 @@ class TranslatorEngine {
             parts.length > 0
         ) {
 
-            return {
+            /*
+             * لدينا أجزاء معروفة،
+             * لكن نستخدم Google للنص كاملًا
+             * حتى لا نخرج ترجمة مقطعة.
+             */
 
-                success:
-                    true,
+            try {
 
-                type:
-                    "partial",
+                const external =
+                    await this.googleTranslate(
+                        text,
+                        source,
+                        target
+                    );
 
-                source:
-                    text,
+                return {
 
-                translations:
-                    parts,
+                    success: true,
 
-                needsExternalTranslation:
-                    true
-            };
+                    type: "external",
+
+                    source: text,
+
+                    translations: [
+                        external
+                    ],
+
+                    parts: parts,
+
+                    needsExternalTranslation: false,
+
+                    fromDictionary: false,
+
+                    fromGoogle: true
+                };
+
+            } catch (error) {
+
+                return {
+
+                    success: true,
+
+                    type: "partial",
+
+                    source: text,
+
+                    translations: parts,
+
+                    needsExternalTranslation: true,
+
+                    fromDictionary: true,
+
+                    fromGoogle: false,
+
+                    externalError:
+                        error.message
+                };
+            }
         }
 
 
-        /* =================================================
-           3. UNKNOWN
-           ================================================= */
+        /* ================================================
+           3. غير موجود → Google
+           ================================================ */
 
-        return {
+        try {
 
-            success:
-                false,
+            const external =
+                await this.googleTranslate(
+                    text,
+                    source,
+                    target
+                );
 
-            type:
-                "unknown",
+            return {
 
-            source:
-                text,
+                success: true,
 
-            translations:
-                [],
+                type: "external",
 
-            needsExternalTranslation:
-                true
-        };
+                source: text,
+
+                translations: [
+                    external
+                ],
+
+                needsExternalTranslation: false,
+
+                fromDictionary: false,
+
+                fromGoogle: true
+            };
+
+        } catch (error) {
+
+            console.error(
+                "SOVT Google Translate Error:",
+                error
+            );
+
+            return {
+
+                success: false,
+
+                type: "external_error",
+
+                source: text,
+
+                translations: [],
+
+                needsExternalTranslation: true,
+
+                fromGoogle: false,
+
+                error:
+                    error.message
+            };
+        }
     }
 
 
@@ -612,7 +773,7 @@ window.addEventListener(
             await translator.load();
 
             console.log(
-                "SOVT Translator V1.1 ready."
+                "SOVT Translator V1.2 ready."
             );
 
             console.log(
@@ -620,27 +781,18 @@ window.addEventListener(
                 translator.getSize()
             );
 
-
-            /* اختبارات */
-
             console.log(
                 'SOVT Test "Hello":',
-                translator.findSmart("Hello")
+                translator.findSmart(
+                    "Hello"
+                )
             );
 
             console.log(
                 'SOVT Test "هلا":',
-                translator.findSmart("هلا")
-            );
-
-            console.log(
-                'SOVT Test "هلااااا":',
-                translator.findSmart("هلااااا")
-            );
-
-            console.log(
-                'SOVT Test "لااااا":',
-                translator.findSmart("لااااا")
+                translator.findSmart(
+                    "هلا"
+                )
             );
 
         } catch (error) {
