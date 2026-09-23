@@ -1,15 +1,19 @@
 /* =========================================================
    SOVT TRANSLATOR ENGINE
-   V1.3 — Smart Translation Selection
+   V1.5
+   Dictionary + Smart Selection + API
 ========================================================= */
 
 class TranslatorEngine {
 
     constructor(
-        dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv"
+        dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv",
+        apiUrl = "/api"
     ) {
 
         this.dictionaryUrl = dictionaryUrl;
+
+        this.apiUrl = apiUrl;
 
         this.dictionary = new Map();
 
@@ -66,15 +70,6 @@ class TranslatorEngine {
 
                 return true;
 
-            } catch (error) {
-
-                console.error(
-                    "SOVT Dictionary Error:",
-                    error
-                );
-
-                throw error;
-
             } finally {
 
                 this.loading = null;
@@ -88,7 +83,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       NORMALIZATION
+       NORMALIZE
     ===================================================== */
 
     normalize(text) {
@@ -97,14 +92,11 @@ class TranslatorEngine {
             return "";
         }
 
-        let value = text;
-
-        value = value
+        let value = text
             .replace(/^\uFEFF/, "")
             .trim()
             .replace(/\s+/g, " ");
 
-        /* Arabic normalization */
 
         value = value
             .replace(/[إأآٱ]/g, "ا")
@@ -112,21 +104,35 @@ class TranslatorEngine {
             .replace(/ؤ/g, "و")
             .replace(/ئ/g, "ي");
 
-        /* Remove Arabic diacritics */
 
         value = value.replace(
             /[\u064B-\u065F\u0670]/g,
             ""
         );
 
-        /* Reduce exaggerated repeated letters */
+
+        value = value.replace(
+            /ـ+/g,
+            ""
+        );
+
 
         value = value.replace(
             /([\u0621-\u064A])\1{2,}/g,
             "$1$1"
         );
 
-        return value.toLowerCase();
+
+        value = value.replace(
+            /[!"#$%&'()*+,\-./:;<=>?@[\\\]^_`{|}~،؛؟«»“”‘’…]+/g,
+            " "
+        );
+
+
+        return value
+            .replace(/\s+/g, " ")
+            .trim()
+            .toLowerCase();
     }
 
 
@@ -170,10 +176,6 @@ class TranslatorEngine {
             const key =
                 this.normalize(source);
 
-            if (!key) {
-                continue;
-            }
-
             if (!this.dictionary.has(key)) {
 
                 this.dictionary.set(
@@ -186,9 +188,7 @@ class TranslatorEngine {
             this.dictionary
                 .get(key)
                 .add(target);
-
         }
-
     }
 
 
@@ -213,71 +213,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       PARTIAL SEARCH
-    ===================================================== */
-
-    findParts(text) {
-
-        const normalized =
-            this.normalize(text);
-
-        if (!normalized) {
-            return [];
-        }
-
-        const words =
-            normalized.split(" ");
-
-        const results = [];
-
-        for (const [key, translations] of this.dictionary) {
-
-            const keyWords =
-                key.split(" ");
-
-            let matches = 0;
-
-            for (const word of words) {
-
-                if (
-                    keyWords.includes(word)
-                ) {
-
-                    matches++;
-
-                }
-
-            }
-
-            if (matches > 0) {
-
-                results.push({
-
-                    key: key,
-
-                    translations:
-                        Array.from(translations),
-
-                    matches: matches,
-
-                    totalWords:
-                        words.length,
-
-                    keyWords:
-                        keyWords.length
-
-                });
-
-            }
-
-        }
-
-        return results;
-    }
-
-
-    /* =====================================================
-       SMART SCORE
+       SCORE
     ===================================================== */
 
     scoreTranslation(
@@ -295,10 +231,6 @@ class TranslatorEngine {
         let score = 0;
 
 
-        /* ---------------------------------------------
-           Exact text
-        --------------------------------------------- */
-
         if (
             originalNormalized ===
             candidateNormalized
@@ -308,10 +240,6 @@ class TranslatorEngine {
 
         }
 
-
-        /* ---------------------------------------------
-           Exact word count
-        --------------------------------------------- */
 
         const originalWords =
             originalNormalized
@@ -323,6 +251,7 @@ class TranslatorEngine {
                 .split(" ")
                 .filter(Boolean);
 
+
         if (
             originalWords.length ===
             candidateWords.length
@@ -333,56 +262,31 @@ class TranslatorEngine {
         }
 
 
-        /* ---------------------------------------------
-           Word overlap
-        --------------------------------------------- */
-
-        const candidateSet =
-            new Set(candidateWords);
-
-        let overlap = 0;
-
-        for (const word of originalWords) {
-
-            if (candidateSet.has(word)) {
-                overlap++;
-            }
-
-        }
-
-        score +=
-            overlap * 20;
+        score += Math.min(
+            candidateWords.length * 10,
+            100
+        );
 
 
-        /* ---------------------------------------------
-           Prefer longer meaningful matches
-        --------------------------------------------- */
-
-        score +=
-            Math.min(
-                originalNormalized.length,
-                50
-            );
-
-
-        /* ---------------------------------------------
-           Target language preference
-        --------------------------------------------- */
-
-        if (options.target) {
+        if (options.target === "ar") {
 
             if (
-                options.target === "ar" &&
-                /[\u0600-\u06FF]/.test(candidate)
+                /[\u0600-\u06FF]/
+                    .test(candidate)
             ) {
 
                 score += 30;
 
             }
 
+        }
+
+
+        if (options.target === "en") {
+
             if (
-                options.target === "en" &&
-                /^[\x00-\x7F]+$/.test(candidate)
+                /^[\x00-\x7F]+$/
+                    .test(candidate)
             ) {
 
                 score += 30;
@@ -397,7 +301,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       CHOOSE BEST TRANSLATION
+       CHOOSE BEST
     ===================================================== */
 
     chooseBest(
@@ -408,7 +312,7 @@ class TranslatorEngine {
 
         if (
             !Array.isArray(translations) ||
-            translations.length === 0
+            !translations.length
         ) {
 
             return null;
@@ -444,34 +348,73 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       SMART EXACT
+       API REQUEST
     ===================================================== */
 
-    findSmart(
+    async apiTranslate(
         text,
-        options = {}
+        source,
+        target
     ) {
 
-        const translations =
-            this.findExact(text);
+        const response =
+            await fetch(
+                this.apiUrl +
+                "/translate",
+                {
 
-        if (!translations.length) {
+                    method: "POST",
 
-            return null;
+                    headers: {
+
+                        "Content-Type":
+                            "application/json"
+
+                    },
+
+                    body: JSON.stringify({
+
+                        text,
+
+                        source,
+
+                        target
+
+                    })
+
+                }
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "SOVT API request failed."
+            );
 
         }
 
-        return this.chooseBest(
-            text,
-            translations,
-            options
-        );
 
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error ||
+                "SOVT API translation failed."
+            );
+
+        }
+
+
+        return data;
     }
 
 
     /* =====================================================
-       GOOGLE TRANSLATE
+       GOOGLE FALLBACK
     ===================================================== */
 
     async googleTranslate(
@@ -524,7 +467,9 @@ class TranslatorEngine {
 
         const translation =
             data[0]
-                .map(part => part[0] || "")
+                .map(
+                    part => part[0] || ""
+                )
                 .join("");
 
 
@@ -567,7 +512,6 @@ class TranslatorEngine {
                 translations: []
 
             };
-
         }
 
 
@@ -579,168 +523,106 @@ class TranslatorEngine {
 
 
         /* ---------------------------------------------
-           1. SEARCH DICTIONARY
+           1. LOCAL DICTIONARY
         --------------------------------------------- */
 
-        const smartResult =
-            this.findSmart(
-                text,
-                {
+        const localTranslations =
+            this.findExact(text);
+
+
+        if (localTranslations.length) {
+
+            const best =
+                this.chooseBest(
+                    text,
+                    localTranslations,
+                    {
+                        source,
+                        target
+                    }
+                );
+
+
+            if (best) {
+
+                return {
+
+                    success: true,
+
+                    type: "exact",
+
+                    translations: [
+                        best.translation
+                    ],
+
+                    score:
+                        best.score,
+
+                    source:
+                        "dictionary",
+
+                    api:
+                        false
+
+                };
+            }
+        }
+
+
+        /* ---------------------------------------------
+           2. SOVT API
+        --------------------------------------------- */
+
+        try {
+
+            const apiResult =
+                await this.apiTranslate(
+                    text,
                     source,
                     target
-                }
-            );
+                );
 
-
-        if (smartResult) {
 
             return {
 
                 success: true,
 
-                type: "exact",
+                type:
+                    apiResult.type ||
+                    "external",
 
                 translations: [
-                    smartResult.translation
+                    apiResult.translation
                 ],
 
-                score:
-                    smartResult.score,
+                source:
+                    "api",
 
-                source: "dictionary",
+                cached:
+                    apiResult.cached === true,
 
-                needsExternalTranslation: false
+                api:
+                    true
 
             };
 
-        }
+        } catch (apiError) {
 
-
-        /* ---------------------------------------------
-           2. PARTIAL DICTIONARY MATCH
-        --------------------------------------------- */
-
-        const parts =
-            this.findParts(text);
-
-
-        if (parts.length) {
-
-            const collected = [];
-
-
-            for (const part of parts) {
-
-                const best =
-                    this.chooseBest(
-                        text,
-                        part.translations,
-                        {
-                            source,
-                            target
-                        }
-                    );
-
-
-                if (best) {
-
-                    collected.push({
-
-                        source:
-                            part.key,
-
-                        translation:
-                            best.translation,
-
-                        score:
-                            best.score,
-
-                        matches:
-                            part.matches
-
-                    });
-
-                }
-
-            }
-
-
-            collected.sort(
-                (a, b) =>
-                    b.score - a.score
+            console.warn(
+                "SOVT API unavailable:",
+                apiError
             );
 
-
-            /* -----------------------------------------
-               If partial result is useful
-            ----------------------------------------- */
-
-            if (collected.length) {
-
-                try {
-
-                    const external =
-                        await this.googleTranslate(
-                            text,
-                            source,
-                            target
-                        );
-
-
-                    return {
-
-                        success: true,
-
-                        type: "external",
-
-                        translations: [
-                            external
-                        ],
-
-                        dictionaryMatches:
-                            collected,
-
-                        source:
-                            "external",
-
-                        needsExternalTranslation:
-                            false
-
-                    };
-
-                } catch (error) {
-
-                    return {
-
-                        success: true,
-
-                        type: "partial",
-
-                        translations:
-                            collected,
-
-                        source:
-                            "dictionary",
-
-                        needsExternalTranslation:
-                            true
-
-                    };
-
-                }
-
-            }
-
         }
 
 
         /* ---------------------------------------------
-           3. NOTHING IN DICTIONARY
+           3. DIRECT EXTERNAL FALLBACK
         --------------------------------------------- */
 
         try {
 
-            const external =
+            const translation =
                 await this.googleTranslate(
                     text,
                     source,
@@ -755,41 +637,33 @@ class TranslatorEngine {
                 type: "external",
 
                 translations: [
-                    external
+                    translation
                 ],
 
-                source: "external",
+                source:
+                    "external",
 
-                needsExternalTranslation: false
+                api:
+                    false
 
             };
 
         } catch (error) {
 
-            console.error(
-                "SOVT External Translation Error:",
-                error
-            );
-
-
             return {
 
                 success: false,
 
-                type: "external_error",
+                type:
+                    "external_error",
 
                 translations: [],
 
                 error:
-                    error.message,
-
-                needsExternalTranslation:
-                    true
+                    error.message
 
             };
-
         }
-
     }
 
 
@@ -800,19 +674,18 @@ class TranslatorEngine {
     getSize() {
 
         return this.dictionary.size;
-
     }
-
 }
 
 
 /* =========================================================
-   GLOBAL SOVT ENGINE
+   GLOBAL ENGINE
 ========================================================= */
 
 const translator =
     new TranslatorEngine(
-        "./data/ITACHI_DICTIONARY.tsv"
+        "./data/ITACHI_DICTIONARY.tsv",
+        "/api"
     );
 
 
@@ -847,7 +720,7 @@ document.addEventListener(
         } catch (error) {
 
             console.error(
-                "SOVT failed to start:",
+                "SOVT startup error:",
                 error
             );
 
