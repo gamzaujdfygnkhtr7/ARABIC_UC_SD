@@ -1,8 +1,7 @@
 /* =========================================================
-   SOVT TRANSLATOR ENGINE V1.2
-   Dictionary + Smart Arabic Normalization
-   + Google Translate Fallback
-   ========================================================= */
+   SOVT TRANSLATOR ENGINE
+   V1.3 — Smart Translation Selection
+========================================================= */
 
 class TranslatorEngine {
 
@@ -16,76 +15,61 @@ class TranslatorEngine {
 
         this.loaded = false;
 
-        this.loadingPromise = null;
+        this.loading = null;
     }
 
 
     /* =====================================================
        LOAD DICTIONARY
-       ===================================================== */
+    ===================================================== */
 
     async load() {
 
         if (this.loaded) {
-            return;
+            return true;
         }
 
-        if (this.loadingPromise) {
-            return this.loadingPromise;
+        if (this.loading) {
+            return this.loading;
         }
 
-        this.loadingPromise = (async () => {
+        this.loading = (async () => {
 
             try {
 
-                console.log(
-                    "SOVT: Loading dictionary:",
-                    this.dictionaryUrl
+                const response = await fetch(
+                    this.dictionaryUrl,
+                    {
+                        cache: "no-cache"
+                    }
                 );
-
-                const response =
-                    await fetch(
-                        this.dictionaryUrl,
-                        {
-                            cache: "no-cache"
-                        }
-                    );
 
                 if (!response.ok) {
 
                     throw new Error(
-                        "HTTP " +
-                        response.status +
-                        " - تعذر تحميل ملف الترجمة"
+                        "Failed to load dictionary."
                     );
+
                 }
 
                 const text =
                     await response.text();
-
-                if (!text.trim()) {
-
-                    throw new Error(
-                        "ملف القاموس فارغ"
-                    );
-                }
 
                 this.parseTSV(text);
 
                 this.loaded = true;
 
                 console.log(
-                    "SOVT dictionary loaded:",
-                    this.dictionary.size,
-                    "entries"
+                    "SOVT Dictionary Loaded:",
+                    this.dictionary.size
                 );
+
+                return true;
 
             } catch (error) {
 
-                this.loaded = false;
-
                 console.error(
-                    "SOVT Translator Error:",
+                    "SOVT Dictionary Error:",
                     error
                 );
 
@@ -93,80 +77,54 @@ class TranslatorEngine {
 
             } finally {
 
-                this.loadingPromise = null;
+                this.loading = null;
+
             }
 
         })();
 
-        return this.loadingPromise;
+        return this.loading;
     }
 
 
     /* =====================================================
-       NORMALIZE TEXT
-       ===================================================== */
+       NORMALIZATION
+    ===================================================== */
 
     normalize(text) {
 
-        if (
-            typeof text !== "string"
-        ) {
+        if (typeof text !== "string") {
             return "";
         }
 
         let value = text;
 
-        value =
-            value.replace(
-                /^\uFEFF/,
-                ""
-            );
+        value = value
+            .replace(/^\uFEFF/, "")
+            .trim()
+            .replace(/\s+/g, " ");
 
-        value =
-            value.trim();
+        /* Arabic normalization */
 
-        value =
-            value.replace(
-                /\s+/g,
-                " "
-            );
+        value = value
+            .replace(/[إأآٱ]/g, "ا")
+            .replace(/ى/g, "ي")
+            .replace(/ؤ/g, "و")
+            .replace(/ئ/g, "ي");
 
-        value =
-            value
-                .replace(
-                    /[إأآٱ]/g,
-                    "ا"
-                )
-                .replace(
-                    /ى/g,
-                    "ي"
-                )
-                .replace(
-                    /ؤ/g,
-                    "و"
-                )
-                .replace(
-                    /ئ/g,
-                    "ي"
-                );
+        /* Remove Arabic diacritics */
 
-        value =
-            value.replace(
-                /[\u064B-\u065F\u0670]/g,
-                ""
-            );
+        value = value.replace(
+            /[\u064B-\u065F\u0670]/g,
+            ""
+        );
 
-        value =
-            value.replace(
-                /ـ+/g,
-                ""
-            );
+        /* Reduce exaggerated repeated letters */
 
-        value =
-            value.replace(
-                /([\u0600-\u06FF])\1{2,}/g,
-                "$1"
-            );
+        value = value.replace(
+            /([\u0621-\u064A])\1{2,}/g,
+            "$1$1"
+        );
 
         return value.toLowerCase();
     }
@@ -174,16 +132,12 @@ class TranslatorEngine {
 
     /* =====================================================
        PARSE TSV
-       ===================================================== */
+    ===================================================== */
 
     parseTSV(text) {
 
-        this.dictionary.clear();
-
         const lines =
             text.split(/\r?\n/);
-
-        let validEntries = 0;
 
         for (const line of lines) {
 
@@ -199,73 +153,53 @@ class TranslatorEngine {
             }
 
             const source =
-                line
-                    .slice(
-                        0,
-                        separator
-                    )
-                    .trim();
+                line.slice(
+                    0,
+                    separator
+                ).trim();
 
             const target =
-                line
-                    .slice(
-                        separator + 1
-                    )
-                    .trim();
+                line.slice(
+                    separator + 1
+                ).trim();
 
-            if (
-                !source ||
-                !target
-            ) {
+            if (!source || !target) {
                 continue;
             }
 
             const key =
-                this.normalize(
-                    source
-                );
+                this.normalize(source);
 
             if (!key) {
                 continue;
             }
 
-            if (
-                !this.dictionary.has(key)
-            ) {
+            if (!this.dictionary.has(key)) {
 
                 this.dictionary.set(
                     key,
                     new Set()
                 );
+
             }
 
             this.dictionary
                 .get(key)
                 .add(target);
 
-            validEntries++;
         }
 
-        console.log(
-            "SOVT TSV parsed:",
-            validEntries,
-            "valid rows"
-        );
     }
 
 
     /* =====================================================
        EXACT SEARCH
-       ===================================================== */
+    ===================================================== */
 
     findExact(text) {
 
         const key =
             this.normalize(text);
-
-        if (!key) {
-            return [];
-        }
 
         const results =
             this.dictionary.get(key);
@@ -274,62 +208,13 @@ class TranslatorEngine {
             return [];
         }
 
-        return Array.from(
-            results
-        );
+        return Array.from(results);
     }
 
 
     /* =====================================================
-       SMART SEARCH
-       ===================================================== */
-
-    findSmart(text) {
-
-        const original =
-            this.normalize(text);
-
-        if (!original) {
-            return [];
-        }
-
-        let results =
-            this.dictionary.get(
-                original
-            );
-
-        if (results) {
-
-            return Array.from(
-                results
-            );
-        }
-
-        let simplified =
-            original.replace(
-                /([\u0600-\u06FF])\1+/g,
-                "$1"
-            );
-
-        results =
-            this.dictionary.get(
-                simplified
-            );
-
-        if (results) {
-
-            return Array.from(
-                results
-            );
-        }
-
-        return [];
-    }
-
-
-    /* =====================================================
-       WORD / PHRASE SEARCH
-       ===================================================== */
+       PARTIAL SEARCH
+    ===================================================== */
 
     findParts(text) {
 
@@ -343,78 +228,257 @@ class TranslatorEngine {
         const words =
             normalized.split(" ");
 
-        const matches = [];
+        const results = [];
 
-        for (
-            let length = words.length;
-            length >= 1;
-            length--
-        ) {
+        for (const [key, translations] of this.dictionary) {
 
-            for (
-                let start = 0;
-                start + length <= words.length;
-                start++
-            ) {
+            const keyWords =
+                key.split(" ");
 
-                const phrase =
-                    words
-                        .slice(
-                            start,
-                            start + length
-                        )
-                        .join(" ");
+            let matches = 0;
 
-                const results =
-                    this.findSmart(
-                        phrase
-                    );
+            for (const word of words) {
 
                 if (
-                    results.length > 0
+                    keyWords.includes(word)
                 ) {
 
-                    matches.push({
+                    matches++;
 
-                        phrase:
-                            phrase,
-
-                        translations:
-                            results,
-
-                        start:
-                            start,
-
-                        length:
-                            length
-                    });
                 }
+
             }
+
+            if (matches > 0) {
+
+                results.push({
+
+                    key: key,
+
+                    translations:
+                        Array.from(translations),
+
+                    matches: matches,
+
+                    totalWords:
+                        words.length,
+
+                    keyWords:
+                        keyWords.length
+
+                });
+
+            }
+
         }
 
-        return matches;
+        return results;
+    }
+
+
+    /* =====================================================
+       SMART SCORE
+    ===================================================== */
+
+    scoreTranslation(
+        original,
+        candidate,
+        options = {}
+    ) {
+
+        const originalNormalized =
+            this.normalize(original);
+
+        const candidateNormalized =
+            this.normalize(candidate);
+
+        let score = 0;
+
+
+        /* ---------------------------------------------
+           Exact text
+        --------------------------------------------- */
+
+        if (
+            originalNormalized ===
+            candidateNormalized
+        ) {
+
+            score += 1000;
+
+        }
+
+
+        /* ---------------------------------------------
+           Exact word count
+        --------------------------------------------- */
+
+        const originalWords =
+            originalNormalized
+                .split(" ")
+                .filter(Boolean);
+
+        const candidateWords =
+            candidateNormalized
+                .split(" ")
+                .filter(Boolean);
+
+        if (
+            originalWords.length ===
+            candidateWords.length
+        ) {
+
+            score += 100;
+
+        }
+
+
+        /* ---------------------------------------------
+           Word overlap
+        --------------------------------------------- */
+
+        const candidateSet =
+            new Set(candidateWords);
+
+        let overlap = 0;
+
+        for (const word of originalWords) {
+
+            if (candidateSet.has(word)) {
+                overlap++;
+            }
+
+        }
+
+        score +=
+            overlap * 20;
+
+
+        /* ---------------------------------------------
+           Prefer longer meaningful matches
+        --------------------------------------------- */
+
+        score +=
+            Math.min(
+                originalNormalized.length,
+                50
+            );
+
+
+        /* ---------------------------------------------
+           Target language preference
+        --------------------------------------------- */
+
+        if (options.target) {
+
+            if (
+                options.target === "ar" &&
+                /[\u0600-\u06FF]/.test(candidate)
+            ) {
+
+                score += 30;
+
+            }
+
+            if (
+                options.target === "en" &&
+                /^[\x00-\x7F]+$/.test(candidate)
+            ) {
+
+                score += 30;
+
+            }
+
+        }
+
+
+        return score;
+    }
+
+
+    /* =====================================================
+       CHOOSE BEST TRANSLATION
+    ===================================================== */
+
+    chooseBest(
+        original,
+        translations,
+        options = {}
+    ) {
+
+        if (
+            !Array.isArray(translations) ||
+            translations.length === 0
+        ) {
+
+            return null;
+
+        }
+
+
+        const scored =
+            translations.map(
+                translation => ({
+
+                    translation,
+
+                    score:
+                        this.scoreTranslation(
+                            original,
+                            translation,
+                            options
+                        )
+
+                })
+            );
+
+
+        scored.sort(
+            (a, b) =>
+                b.score - a.score
+        );
+
+
+        return scored[0];
+    }
+
+
+    /* =====================================================
+       SMART EXACT
+    ===================================================== */
+
+    findSmart(
+        text,
+        options = {}
+    ) {
+
+        const translations =
+            this.findExact(text);
+
+        if (!translations.length) {
+
+            return null;
+
+        }
+
+        return this.chooseBest(
+            text,
+            translations,
+            options
+        );
+
     }
 
 
     /* =====================================================
        GOOGLE TRANSLATE
-       ===================================================== */
+    ===================================================== */
 
     async googleTranslate(
         text,
         source = "auto",
         target = "en"
     ) {
-
-        if (
-            !text ||
-            !target
-        ) {
-
-            throw new Error(
-                "نص أو لغة غير صحيحة"
-            );
-        }
 
         const url =
             "https://translate.googleapis.com/" +
@@ -428,21 +492,23 @@ class TranslatorEngine {
             "&q=" +
             encodeURIComponent(text);
 
+
         const response =
-            await fetch(
-                url
-            );
+            await fetch(url);
+
 
         if (!response.ok) {
 
             throw new Error(
-                "Google Translate HTTP " +
-                response.status
+                "External translation failed."
             );
+
         }
+
 
         const data =
             await response.json();
+
 
         if (
             !Array.isArray(data) ||
@@ -450,44 +516,42 @@ class TranslatorEngine {
         ) {
 
             throw new Error(
-                "استجابة Google Translate غير صالحة"
+                "Invalid translation response."
             );
+
         }
 
-        const translated =
+
+        const translation =
             data[0]
-                .map(function (part) {
+                .map(part => part[0] || "")
+                .join("");
 
-                    if (
-                        Array.isArray(part)
-                    ) {
-                        return part[0] || "";
-                    }
 
-                    return "";
-                })
-                .join("")
-                .trim();
-
-        if (!translated) {
+        if (!translation.trim()) {
 
             throw new Error(
-                "Google لم يرجع ترجمة"
+                "Empty translation."
             );
+
         }
 
-        return translated;
+
+        return translation.trim();
     }
 
 
     /* =====================================================
-       TRANSLATE
-       ===================================================== */
+       MAIN TRANSLATION
+    ===================================================== */
 
     async translate(
         text,
         options = {}
     ) {
+
+        await this.load();
+
 
         if (
             typeof text !== "string" ||
@@ -498,12 +562,12 @@ class TranslatorEngine {
 
                 success: false,
 
-                type: "empty",
-
-                source: text,
+                type: "invalid_input",
 
                 translations: []
+
             };
+
         }
 
 
@@ -514,44 +578,21 @@ class TranslatorEngine {
             options.target || "en";
 
 
-        /* ================================================
-           تحميل القاموس
-           ================================================ */
+        /* ---------------------------------------------
+           1. SEARCH DICTIONARY
+        --------------------------------------------- */
 
-        try {
-
-            await this.load();
-
-        } catch (error) {
-
-            return {
-
-                success: false,
-
-                type: "dictionary_error",
-
-                source: text,
-
-                translations: [],
-
-                needsExternalTranslation: true,
-
-                error:
-                    error.message
-            };
-        }
+        const smartResult =
+            this.findSmart(
+                text,
+                {
+                    source,
+                    target
+                }
+            );
 
 
-        /* ================================================
-           1. البحث الكامل
-           ================================================ */
-
-        const exact =
-            this.findSmart(text);
-
-        if (
-            exact.length > 0
-        ) {
+        if (smartResult) {
 
             return {
 
@@ -559,92 +600,143 @@ class TranslatorEngine {
 
                 type: "exact",
 
-                source: text,
+                translations: [
+                    smartResult.translation
+                ],
 
-                translations: exact,
+                score:
+                    smartResult.score,
 
-                needsExternalTranslation: false,
+                source: "dictionary",
 
-                fromDictionary: true
+                needsExternalTranslation: false
+
             };
+
         }
 
 
-        /* ================================================
-           2. البحث عن أجزاء
-           ================================================ */
+        /* ---------------------------------------------
+           2. PARTIAL DICTIONARY MATCH
+        --------------------------------------------- */
 
         const parts =
             this.findParts(text);
 
-        if (
-            parts.length > 0
-        ) {
 
-            /*
-             * لدينا أجزاء معروفة،
-             * لكن نستخدم Google للنص كاملًا
-             * حتى لا نخرج ترجمة مقطعة.
-             */
+        if (parts.length) {
 
-            try {
+            const collected = [];
 
-                const external =
-                    await this.googleTranslate(
+
+            for (const part of parts) {
+
+                const best =
+                    this.chooseBest(
                         text,
-                        source,
-                        target
+                        part.translations,
+                        {
+                            source,
+                            target
+                        }
                     );
 
-                return {
 
-                    success: true,
+                if (best) {
 
-                    type: "external",
+                    collected.push({
 
-                    source: text,
+                        source:
+                            part.key,
 
-                    translations: [
-                        external
-                    ],
+                        translation:
+                            best.translation,
 
-                    parts: parts,
+                        score:
+                            best.score,
 
-                    needsExternalTranslation: false,
+                        matches:
+                            part.matches
 
-                    fromDictionary: false,
+                    });
 
-                    fromGoogle: true
-                };
+                }
 
-            } catch (error) {
-
-                return {
-
-                    success: true,
-
-                    type: "partial",
-
-                    source: text,
-
-                    translations: parts,
-
-                    needsExternalTranslation: true,
-
-                    fromDictionary: true,
-
-                    fromGoogle: false,
-
-                    externalError:
-                        error.message
-                };
             }
+
+
+            collected.sort(
+                (a, b) =>
+                    b.score - a.score
+            );
+
+
+            /* -----------------------------------------
+               If partial result is useful
+            ----------------------------------------- */
+
+            if (collected.length) {
+
+                try {
+
+                    const external =
+                        await this.googleTranslate(
+                            text,
+                            source,
+                            target
+                        );
+
+
+                    return {
+
+                        success: true,
+
+                        type: "external",
+
+                        translations: [
+                            external
+                        ],
+
+                        dictionaryMatches:
+                            collected,
+
+                        source:
+                            "external",
+
+                        needsExternalTranslation:
+                            false
+
+                    };
+
+                } catch (error) {
+
+                    return {
+
+                        success: true,
+
+                        type: "partial",
+
+                        translations:
+                            collected,
+
+                        source:
+                            "dictionary",
+
+                        needsExternalTranslation:
+                            true
+
+                    };
+
+                }
+
+            }
+
         }
 
 
-        /* ================================================
-           3. غير موجود → Google
-           ================================================ */
+        /* ---------------------------------------------
+           3. NOTHING IN DICTIONARY
+        --------------------------------------------- */
 
         try {
 
@@ -655,31 +747,30 @@ class TranslatorEngine {
                     target
                 );
 
+
             return {
 
                 success: true,
 
                 type: "external",
 
-                source: text,
-
                 translations: [
                     external
                 ],
 
-                needsExternalTranslation: false,
+                source: "external",
 
-                fromDictionary: false,
+                needsExternalTranslation: false
 
-                fromGoogle: true
             };
 
         } catch (error) {
 
             console.error(
-                "SOVT Google Translate Error:",
+                "SOVT External Translation Error:",
                 error
             );
+
 
             return {
 
@@ -687,71 +778,43 @@ class TranslatorEngine {
 
                 type: "external_error",
 
-                source: text,
-
                 translations: [],
 
-                needsExternalTranslation: true,
-
-                fromGoogle: false,
-
                 error:
-                    error.message
+                    error.message,
+
+                needsExternalTranslation:
+                    true
+
             };
+
         }
+
     }
 
 
     /* =====================================================
-       GET DICTIONARY SIZE
-       ===================================================== */
+       DICTIONARY SIZE
+    ===================================================== */
 
     getSize() {
 
         return this.dictionary.size;
+
     }
 
-
-    /* =====================================================
-       CHECK WORD
-       ===================================================== */
-
-    has(text) {
-
-        return (
-            this.findSmart(text).length > 0
-        );
-    }
-
-
-    /* =====================================================
-       CLEAR
-       ===================================================== */
-
-    clear() {
-
-        this.dictionary.clear();
-
-        this.loaded = false;
-
-        this.loadingPromise = null;
-    }
 }
 
 
 /* =========================================================
-   CREATE SOVT TRANSLATOR
-   ========================================================= */
+   GLOBAL SOVT ENGINE
+========================================================= */
 
 const translator =
     new TranslatorEngine(
         "./data/ITACHI_DICTIONARY.tsv"
     );
 
-
-/* =========================================================
-   GLOBAL ACCESS
-   ========================================================= */
 
 window.TranslatorEngine =
     TranslatorEngine;
@@ -762,45 +825,33 @@ window.translator =
 
 /* =========================================================
    AUTO LOAD
-   ========================================================= */
+========================================================= */
 
-window.addEventListener(
+document.addEventListener(
     "DOMContentLoaded",
-    async () => {
+    async function () {
 
         try {
 
             await translator.load();
 
             console.log(
-                "SOVT Translator V1.2 ready."
+                "SOVT Translator Ready."
             );
 
             console.log(
-                "Dictionary size:",
+                "Dictionary entries:",
                 translator.getSize()
-            );
-
-            console.log(
-                'SOVT Test "Hello":',
-                translator.findSmart(
-                    "Hello"
-                )
-            );
-
-            console.log(
-                'SOVT Test "هلا":',
-                translator.findSmart(
-                    "هلا"
-                )
             );
 
         } catch (error) {
 
             console.error(
-                "SOVT Translator failed to load:",
+                "SOVT failed to start:",
                 error
             );
+
         }
+
     }
 );
