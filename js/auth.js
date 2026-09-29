@@ -1,17 +1,17 @@
-/* =====================================================
-   SOVT
-   AUTH.JS
-   Firebase Authentication
-===================================================== */
+/*
+ * SOVT AUTH
+ * Firebase Authentication
+ * Email + Google + GitHub
+ */
 
 (function () {
 
     "use strict";
 
 
-    /* =================================================
+    /* ================================
        FIREBASE CONFIG
-    ================================================= */
+    ================================= */
 
     const firebaseConfig = {
 
@@ -39,326 +39,517 @@
     };
 
 
-    /* =================================================
-       FIREBASE SDK
-    ================================================= */
+    /* ================================
+       STATE
+    ================================= */
 
-    import(
-        "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"
-    )
-    .then(async function (firebaseAppModule) {
+    let firebaseApp = null;
+    let firebaseAuth = null;
 
-        const {
-            initializeApp
-        } = firebaseAppModule;
+    let firebaseReady = false;
+    let firebasePromise = null;
 
 
-        const firebaseAuthModule =
-            await import(
-                "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"
-            );
+    /* ================================
+       LOAD SCRIPT
+    ================================= */
 
+    function loadScript(src) {
 
-        const {
+        return new Promise(function (resolve, reject) {
 
-            getAuth,
-
-            onAuthStateChanged,
-
-            signOut,
-
-            signInWithEmailAndPassword,
-
-            createUserWithEmailAndPassword,
-
-            GoogleAuthProvider,
-
-            GithubAuthProvider,
-
-            signInWithPopup
-
-        } = firebaseAuthModule;
-
-
-        /* =============================================
-           INITIALIZE FIREBASE
-        ============================================= */
-
-        const app =
-            initializeApp(firebaseConfig);
-
-
-        const auth =
-            getAuth(app);
-
-
-        window.firebaseApp =
-            app;
-
-
-        window.firebaseAuth =
-            auth;
-
-
-        /* =============================================
-           PROVIDERS
-        ============================================= */
-
-        const googleProvider =
-            new GoogleAuthProvider();
-
-
-        const githubProvider =
-            new GithubAuthProvider();
-
-
-        /* =============================================
-           UPDATE AUTH UI
-        ============================================= */
-
-        async function updateAuthUI(user) {
-
-            const loginButton =
-                document.getElementById(
-                    "loginButton"
+            const existing =
+                document.querySelector(
+                    'script[src="' + src + '"]'
                 );
 
+            if (existing) {
 
-            const authArea =
-                document.getElementById(
-                    "authArea"
-                );
+                if (existing.dataset.loaded === "true") {
 
+                    resolve();
 
-            if (user) {
-
-                localStorage.setItem(
-                    "itachi_logged_in",
-                    "true"
-                );
-
-
-                if (loginButton) {
-
-                    loginButton.textContent =
-                        "حسابي";
-
-
-                    loginButton.onclick =
-                        function () {
-
-                            window.location.href =
-                                "profile.html";
-
-                        };
-
+                    return;
                 }
 
+                existing.addEventListener(
+                    "load",
+                    resolve,
+                    { once: true }
+                );
 
-                if (authArea) {
+                existing.addEventListener(
+                    "error",
+                    reject,
+                    { once: true }
+                );
 
-                    authArea.innerHTML = `
-
-                        <button
-                            class="menu-link"
-                            type="button"
-                            onclick="goTo('dashboard.html')"
-                        >
-                            <span>
-                                لوحة التحكم
-                            </span>
-                        </button>
-
-                        <button
-                            class="menu-link"
-                            type="button"
-                            onclick="goTo('profile.html')"
-                        >
-                            <span>
-                                الملف الشخصي
-                            </span>
-                        </button>
-
-                        <button
-                            class="menu-link"
-                            type="button"
-                            onclick="goTo('settings.html')"
-                        >
-                            <span>
-                                الإعدادات
-                            </span>
-                        </button>
-
-                        <button
-                            class="menu-link"
-                            type="button"
-                            onclick="logout()"
-                        >
-                            <span>
-                                تسجيل الخروج
-                            </span>
-                        </button>
-
-                    `;
-
-                }
-
+                return;
             }
 
-            else {
 
-                localStorage.removeItem(
-                    "itachi_logged_in"
+            const script =
+                document.createElement("script");
+
+            script.src = src;
+
+            script.async = true;
+
+            script.onload = function () {
+
+                script.dataset.loaded = "true";
+
+                resolve();
+
+            };
+
+            script.onerror = function () {
+
+                reject(
+                    new Error(
+                        "تعذر تحميل Firebase: " + src
+                    )
                 );
 
-
-                if (loginButton) {
-
-                    loginButton.textContent =
-                        "تسجيل الدخول";
+            };
 
 
-                    loginButton.onclick =
-                        function () {
+            document.head.appendChild(script);
 
-                            window.location.href =
-                                "login.html";
+        });
 
-                        };
-
-                }
+    }
 
 
-                if (authArea) {
+    /* ================================
+       INITIALIZE FIREBASE
+    ================================= */
 
-                    authArea.innerHTML = `
+    async function initializeFirebase() {
 
-                        <p class="auth-message">
-                            سجّل الدخول أو أنشئ
-                            حسابًا للوصول إلى حسابك.
-                        </p>
+        if (firebaseReady) {
 
-                        <button
-                            class="auth-button"
-                            type="button"
-                            onclick="goToLogin()"
-                        >
-                            تسجيل الدخول
-                        </button>
+            return {
 
-                        <button
-                            class="auth-button register-button"
-                            type="button"
-                            onclick="goToRegister()"
-                        >
-                            إنشاء حساب
-                        </button>
+                app: firebaseApp,
 
-                    `;
+                auth: firebaseAuth
 
-                }
-
-            }
+            };
 
         }
 
 
-        /* =============================================
-           LOGOUT
-        ============================================= */
+        if (firebasePromise) {
 
-        window.logout =
-            async function () {
+            return firebasePromise;
+
+        }
+
+
+        firebasePromise =
+            (async function () {
 
                 try {
 
-                    await signOut(auth);
+                    /*
+                     * Firebase App
+                     */
 
+                    await loadScript(
+                        "https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"
+                    );
+
+
+                    /*
+                     * Firebase Authentication
+                     */
+
+                    await loadScript(
+                        "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"
+                    );
+
+
+                    /*
+                     * Check Firebase
+                     */
+
+                    if (
+                        !window.firebase ||
+                        typeof window.firebase.initializeApp !== "function"
+                    ) {
+
+                        throw new Error(
+                            "Firebase SDK لم يتم تحميله."
+                        );
+
+                    }
+
+
+                    /*
+                     * Initialize App
+                     */
+
+                    if (
+                        window.firebase.apps &&
+                        window.firebase.apps.length > 0
+                    ) {
+
+                        firebaseApp =
+                            window.firebase.apps[0];
+
+                    } else {
+
+                        firebaseApp =
+                            window.firebase.initializeApp(
+                                firebaseConfig
+                            );
+
+                    }
+
+
+                    /*
+                     * Auth
+                     */
+
+                    firebaseAuth =
+                        window.firebase.auth();
+
+
+                    /*
+                     * Providers
+                     */
+
+                    window.SOVTGoogleProvider =
+                        new window.firebase.auth.GoogleAuthProvider();
+
+
+                    window.SOVTGitHubProvider =
+                        new window.firebase.auth.GithubAuthProvider();
+
+
+                    /*
+                     * Persistence
+                     */
+
+                    await firebaseAuth.setPersistence(
+                        window.firebase.auth.Auth.Persistence.LOCAL
+                    );
+
+
+                    firebaseReady = true;
+
+
+                    /*
+                     * Global
+                     */
+
+                    window.firebaseApp =
+                        firebaseApp;
+
+                    window.firebaseAuth =
+                        firebaseAuth;
+
+
+                    console.log(
+                        "SOVT Firebase: READY"
+                    );
+
+
+                    return {
+
+                        app: firebaseApp,
+
+                        auth: firebaseAuth
+
+                    };
+
+
+                } catch (error) {
+
+                    console.error(
+                        "SOVT FIREBASE ERROR:",
+                        error
+                    );
+
+
+                    firebaseReady = false;
+
+                    firebasePromise = null;
+
+                    throw error;
+
+                }
+
+            })();
+
+
+        return firebasePromise;
+
+    }
+
+
+    /* ================================
+       READY
+    ================================= */
+
+    async function ready() {
+
+        return await initializeFirebase();
+
+    }
+
+
+    /* ================================
+       CURRENT USER
+    ================================= */
+
+    async function getCurrentUser() {
+
+        await initializeFirebase();
+
+        return new Promise(function (resolve) {
+
+            const unsubscribe =
+                firebaseAuth.onAuthStateChanged(
+                    function (user) {
+
+                        unsubscribe();
+
+                        resolve(user || null);
+
+                    }
+                );
+
+        });
+
+    }
+
+
+    /* ================================
+       EMAIL REGISTER
+    ================================= */
+
+    async function registerWithEmail(
+        email,
+        password,
+        username
+    ) {
+
+        await initializeFirebase();
+
+
+        const result =
+            await firebaseAuth.createUserWithEmailAndPassword(
+                email,
+                password
+            );
+
+
+        const user =
+            result.user;
+
+
+        if (user && username) {
+
+            await user.updateProfile({
+
+                displayName:
+                    username
+
+            });
+
+        }
+
+
+        return user;
+
+    }
+
+
+    /* ================================
+       EMAIL LOGIN
+    ================================= */
+
+    async function loginWithEmail(
+        email,
+        password
+    ) {
+
+        await initializeFirebase();
+
+
+        const result =
+            await firebaseAuth.signInWithEmailAndPassword(
+                email,
+                password
+            );
+
+
+        return result.user;
+
+    }
+
+
+    /* ================================
+       GOOGLE LOGIN
+    ================================= */
+
+    async function googleLogin() {
+
+        await initializeFirebase();
+
+
+        const result =
+            await firebaseAuth.signInWithPopup(
+                window.SOVTGoogleProvider
+            );
+
+
+        return result.user;
+
+    }
+
+
+    /* ================================
+       GITHUB LOGIN
+    ================================= */
+
+    async function githubLogin() {
+
+        await initializeFirebase();
+
+
+        const result =
+            await firebaseAuth.signInWithPopup(
+                window.SOVTGitHubProvider
+            );
+
+
+        return result.user;
+
+    }
+
+
+    /* ================================
+       LOGOUT
+    ================================= */
+
+    async function logout() {
+
+        await initializeFirebase();
+
+
+        await firebaseAuth.signOut();
+
+
+        localStorage.removeItem(
+            "itachi_logged_in"
+        );
+
+    }
+
+
+    /* ================================
+       AUTH STATE
+    ================================= */
+
+    async function listenAuthState(
+        callback
+    ) {
+
+        await initializeFirebase();
+
+
+        return firebaseAuth.onAuthStateChanged(
+            function (user) {
+
+                if (user) {
+
+                    localStorage.setItem(
+                        "itachi_logged_in",
+                        "true"
+                    );
+
+                } else {
 
                     localStorage.removeItem(
                         "itachi_logged_in"
                     );
 
-
-                    window.location.href =
-                        "index.html";
-
                 }
 
-                catch (error) {
 
-                    console.error(
-                        "FIREBASE LOGOUT ERROR:",
-                        error
-                    );
+                if (
+                    typeof callback === "function"
+                ) {
+
+                    callback(user);
 
                 }
-
-            };
-
-
-        /* =============================================
-           CURRENT USER
-        ============================================= */
-
-        window.getCurrentUser =
-            function () {
-
-                return auth.currentUser;
-
-            };
-
-
-        /* =============================================
-           AUTH STATE
-        ============================================= */
-
-        onAuthStateChanged(
-            auth,
-            function (user) {
-
-                updateAuthUI(user);
 
             }
         );
 
-
-        /* =============================================
-           FIREBASE ACCESS
-        ============================================= */
-
-        window.SOVTFirebase = {
-
-            auth,
-
-            googleProvider,
-
-            githubProvider,
-
-            signInWithEmailAndPassword,
-
-            createUserWithEmailAndPassword,
-
-            signInWithPopup
-
-        };
+    }
 
 
-        console.log(
-            "SOVT Firebase Authentication جاهز ✔️"
-        );
+    /* ================================
+       GLOBAL SOVT API
+    ================================= */
 
-    })
+    window.SOVTFirebase = {
+
+        ready:
+
+            ready,
+
+        getCurrentUser:
+
+            getCurrentUser,
+
+        registerWithEmail:
+
+            registerWithEmail,
+
+        loginWithEmail:
+
+            loginWithEmail,
+
+        googleLogin:
+
+            googleLogin,
+
+        githubLogin:
+
+            githubLogin,
+
+        logout:
+
+            logout,
+
+        listenAuthState:
+
+            listenAuthState
+
+    };
 
 
-    .catch(function (error) {
+    /*
+     * Start Firebase immediately.
+     * Errors are logged but do not
+     * break the page.
+     */
 
-        console.error(
-            "تعذر تحميل Firebase Authentication:",
-            error
-        );
+    initializeFirebase()
+        .catch(function (error) {
 
-    });
+            console.error(
+                "SOVT Firebase initialization failed:",
+                error
+            );
+
+        });
 
 
 })();
