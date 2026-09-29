@@ -15,7 +15,7 @@
         href="animations.css"
     >
 
-    <title>ARABIC_UCH_SD</title>
+    <title>SOVT</title>
 
     <style>
 
@@ -485,7 +485,7 @@
         </div>
 
         <div class="logo">
-            ARABIC_UCH_SD
+            SOVT
         </div>
 
     </div>
@@ -555,7 +555,7 @@
             <div>
 
                 <div class="menu-title">
-                    ARABIC_UCH_SD
+                    SOVT
                 </div>
 
                 <div class="menu-subtitle">
@@ -955,11 +955,37 @@ function buildAuthMenu() {
 }
 
 
-function logout() {
+async function logout() {
 
-    localStorage.removeItem(
-        "itachi_logged_in"
-    );
+    try {
+
+        if (
+            window.SOVTFirebase &&
+            typeof window.SOVTFirebase.logout === "function"
+        ) {
+
+            await window.SOVTFirebase.logout();
+
+        } else {
+
+            localStorage.removeItem(
+                "itachi_logged_in"
+            );
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "SOVT Logout Error:",
+            error
+        );
+
+        localStorage.removeItem(
+            "itachi_logged_in"
+        );
+
+    }
 
     window.location.href =
         "index.html";
@@ -1321,17 +1347,7 @@ buildAuthMenu();
 
 
 <!-- =========================
-     SUPABASE
-========================= -->
-
-<script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-    crossorigin="anonymous"
-></script>
-
-
-<!-- =========================
-     AUTH.JS
+     AUTH.JS — FIREBASE
 ========================= -->
 
 <script>
@@ -1350,7 +1366,7 @@ window.addEventListener(
             function () {
 
                 console.log(
-                    "auth.js loaded successfully."
+                    "SOVT auth.js loaded successfully."
                 );
 
             };
@@ -1359,7 +1375,7 @@ window.addEventListener(
             function () {
 
                 console.warn(
-                    "auth.js لم يتم تحميله."
+                    "SOVT auth.js لم يتم تحميله."
                 );
 
             };
@@ -1382,4 +1398,4 @@ window.addEventListener(
 
 </body>
 
-</html>
+    </html>
