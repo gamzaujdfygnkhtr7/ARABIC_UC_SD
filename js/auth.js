@@ -1,7 +1,7 @@
 /* =====================================================
-   ARABIC_UCH_SD
+   SOVT
    AUTH.JS
-   نظام تسجيل الدخول والحسابات
+   Firebase Authentication
 ===================================================== */
 
 (function () {
@@ -10,67 +10,113 @@
 
 
     /* =================================================
-       SUPABASE CONFIG
+       FIREBASE CONFIG
     ================================================= */
 
-    const SUPABASE_URL =
-        "https://oqrdadmfpwgrfcphddbu.supabase.co";
+    const firebaseConfig = {
 
-    const SUPABASE_ANON_KEY =
-        "sb_publishable_gHcWL0VoJXUTL4JXGZilZA_na0KSJQZ";
+        apiKey:
+            "AIzaSyALbPr2kBfrDKmtLlAkwq92_jKzegE2k6M",
+
+        authDomain:
+            "sovt-8e674.firebaseapp.com",
+
+        projectId:
+            "sovt-8e674",
+
+        storageBucket:
+            "sovt-8e674.firebasestorage.app",
+
+        messagingSenderId:
+            "153910651650",
+
+        appId:
+            "1:153910651650:web:2f6b365acff4e6de3c301b",
+
+        measurementId:
+            "G-N5TCR9XS24"
+
+    };
 
 
     /* =================================================
-       CHECK SUPABASE
+       FIREBASE SDK
     ================================================= */
 
-    if (
-        typeof window.supabase === "undefined" ||
-        typeof window.supabase.createClient !== "function"
-    ) {
+    import(
+        "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js"
+    )
+    .then(async function (firebaseAppModule) {
 
-        console.error(
-            "Supabase لم يتم تحميله بشكل صحيح."
-        );
-
-        return;
-    }
+        const {
+            initializeApp
+        } = firebaseAppModule;
 
 
-    /* =================================================
-       CREATE CLIENT
-    ================================================= */
-
-    const supabaseClient =
-        window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
+        const firebaseAuthModule =
+            await import(
+                "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js"
+            );
 
 
-    /* =================================================
-       MAKE CLIENT AVAILABLE
-    ================================================= */
+        const {
 
-    window.supabaseClient =
-        supabaseClient;
+            getAuth,
+
+            onAuthStateChanged,
+
+            signOut,
+
+            signInWithEmailAndPassword,
+
+            createUserWithEmailAndPassword,
+
+            GoogleAuthProvider,
+
+            GithubAuthProvider,
+
+            signInWithPopup
+
+        } = firebaseAuthModule;
 
 
-    /* =================================================
-       UPDATE LOGIN UI
-    ================================================= */
+        /* =============================================
+           INITIALIZE FIREBASE
+        ============================================= */
 
-    async function updateAuthUI() {
+        const app =
+            initializeApp(firebaseConfig);
 
-        try {
 
-            const {
-                data: {
-                    user
-                }
-            } =
-                await supabaseClient.auth.getUser();
+        const auth =
+            getAuth(app);
 
+
+        window.firebaseApp =
+            app;
+
+
+        window.firebaseAuth =
+            auth;
+
+
+        /* =============================================
+           PROVIDERS
+        ============================================= */
+
+        const googleProvider =
+            new GoogleAuthProvider();
+
+
+        const githubProvider =
+            new GithubAuthProvider();
+
+
+        /* =============================================
+           UPDATE AUTH UI
+        ============================================= */
+
+        async function updateAuthUI(user) {
 
             const loginButton =
                 document.getElementById(
@@ -83,10 +129,6 @@
                     "authArea"
                 );
 
-
-            /* =========================================
-               USER LOGGED IN
-            ========================================= */
 
             if (user) {
 
@@ -163,10 +205,6 @@
 
             }
 
-            /* =========================================
-               USER NOT LOGGED IN
-            ========================================= */
-
             else {
 
                 localStorage.removeItem(
@@ -224,125 +262,103 @@
 
         }
 
-        catch (error) {
 
-            console.error(
-                "خطأ في التحقق من المستخدم:",
-                error
-            );
+        /* =============================================
+           LOGOUT
+        ============================================= */
 
-        }
+        window.logout =
+            async function () {
 
-    }
+                try {
 
-
-    /* =================================================
-       LOGOUT
-    ================================================= */
-
-    window.logout =
-        async function () {
-
-            try {
-
-                await supabaseClient.auth.signOut();
-
-                localStorage.removeItem(
-                    "itachi_logged_in"
-                );
-
-                window.location.href =
-                    "index.html";
-
-            }
-
-            catch (error) {
-
-                console.error(
-                    "خطأ أثناء تسجيل الخروج:",
-                    error
-                );
-
-            }
-
-        };
+                    await signOut(auth);
 
 
-    /* =================================================
-       GET CURRENT USER
-    ================================================= */
+                    localStorage.removeItem(
+                        "itachi_logged_in"
+                    );
 
-    window.getCurrentUser =
-        async function () {
 
-            const {
-                data: {
-                    user
+                    window.location.href =
+                        "index.html";
+
                 }
-            } =
-                await supabaseClient.auth.getUser();
+
+                catch (error) {
+
+                    console.error(
+                        "FIREBASE LOGOUT ERROR:",
+                        error
+                    );
+
+                }
+
+            };
 
 
-            return user;
+        /* =============================================
+           CURRENT USER
+        ============================================= */
 
-        };
+        window.getCurrentUser =
+            function () {
+
+                return auth.currentUser;
+
+            };
 
 
-    /* =================================================
-       AUTH STATE LISTENER
-    ================================================= */
+        /* =============================================
+           AUTH STATE
+        ============================================= */
 
-    supabaseClient.auth.onAuthStateChange(
-        function (
-            event,
-            session
-        ) {
+        onAuthStateChanged(
+            auth,
+            function (user) {
 
-            if (session) {
-
-                localStorage.setItem(
-                    "itachi_logged_in",
-                    "true"
-                );
+                updateAuthUI(user);
 
             }
-
-            else {
-
-                localStorage.removeItem(
-                    "itachi_logged_in"
-                );
-
-            }
-
-
-            updateAuthUI();
-
-        }
-    );
-
-
-    /* =================================================
-       START
-    ================================================= */
-
-    if (
-        document.readyState ===
-        "loading"
-    ) {
-
-        document.addEventListener(
-            "DOMContentLoaded",
-            updateAuthUI
         );
 
-    }
 
-    else {
+        /* =============================================
+           FIREBASE ACCESS
+        ============================================= */
 
-        updateAuthUI();
+        window.SOVTFirebase = {
 
-    }
+            auth,
+
+            googleProvider,
+
+            githubProvider,
+
+            signInWithEmailAndPassword,
+
+            createUserWithEmailAndPassword,
+
+            signInWithPopup
+
+        };
+
+
+        console.log(
+            "SOVT Firebase Authentication جاهز ✔️"
+        );
+
+    })
+
+
+    .catch(function (error) {
+
+        console.error(
+            "تعذر تحميل Firebase Authentication:",
+            error
+        );
+
+    });
 
 
 })();
