@@ -824,53 +824,6 @@ body {
 
             </button>
 
-
-            <!-- DISCORD -->
-
-            <button
-                id="discordButton"
-                class="social-button"
-                type="button"
-                onclick="discordLogin()"
-            >
-
-                <span class="social-icon">
-
-                    <svg
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                        aria-hidden="true"
-                    >
-
-                        <path
-                            fill="#5865F2"
-                            d="M19.54 5.2A16.2 16.2 0 0 0 15.57 4l-.48.98a14.7 14.7 0 0 0-6.18 0L8.43 4a16.2 16.2 0 0 0-3.97 1.2C2.39 8.68 1.7 12.38 2.04 16.1a16.2 16.2 0 0 0 4.96 2.52l1.2-1.65a9.5 9.5 0 0 1-1.85-.9l.45-.35c3.47 1.62 7.67 1.62 11.1 0l.46.35c-.58.36-1.2.66-1.85.9l1.2 1.65a16.2 16.2 0 0 0 4.96-2.52c.4-4.3-.65-8.03-3.13-10.9z"
-                        />
-
-                        <circle
-                            cx="8.5"
-                            cy="12"
-                            r="1.25"
-                            fill="#050505"
-                        />
-
-                        <circle
-                            cx="15.5"
-                            cy="12"
-                            r="1.25"
-                            fill="#050505"
-                        />
-
-                    </svg>
-
-                </span>
-
-                <span>
-                    المتابعة باستخدام Discord
-                </span>
-
-            </button>
-
         </div>
 
 
@@ -889,42 +842,15 @@ body {
 </div>
 
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- SOVT FIREBASE AUTH -->
+
+<script src="js/auth.js"></script>
 
 
 <script>
 
-const SUPABASE_URL =
-    "https://oqrdadmfpwgrfcphddbu.supabase.co";
-
-const SUPABASE_ANON_KEY =
-    "sb_publishable_gHcWL0VoJXUTL4JXGZilZA_na0KSJQZ";
-
 const SITE_URL =
     "https://itachisd.netlify.app/";
-
-
-let supabaseClient = null;
-
-
-if (
-    window.supabase &&
-    typeof window.supabase.createClient === "function"
-) {
-
-    supabaseClient =
-        window.supabase.createClient(
-            SUPABASE_URL,
-            SUPABASE_ANON_KEY
-        );
-
-} else {
-
-    console.error(
-        "Supabase library لم يتم تحميلها."
-    );
-
-}
 
 
 /* MESSAGE */
@@ -953,24 +879,6 @@ function clearMessage() {
     message.textContent = "";
 
     message.className = "message";
-}
-
-
-/* SUPABASE */
-
-function getSupabase() {
-
-    if (!supabaseClient) {
-
-        showMessage(
-            "تعذر تحميل خدمة تسجيل الدخول.",
-            "error"
-        );
-
-        return null;
-    }
-
-    return supabaseClient;
 }
 
 
@@ -1013,6 +921,99 @@ function showForm(type) {
 }
 
 
+/* FIREBASE READY */
+
+async function waitForFirebase() {
+
+    let attempts = 0;
+
+    while (attempts < 100) {
+
+        if (
+            window.SOVTFirebase &&
+            typeof window.SOVTFirebase.ready === "function"
+        ) {
+
+            await window.SOVTFirebase.ready();
+
+            return window.SOVTFirebase;
+        }
+
+        await new Promise(
+            resolve => setTimeout(resolve, 100)
+        );
+
+        attempts++;
+    }
+
+    throw new Error(
+        "تعذر تشغيل Firebase."
+    );
+}
+
+
+/* FIREBASE ERROR */
+
+function firebaseErrorMessage(error) {
+
+    const code =
+        error && error.code
+            ? error.code
+            : "";
+
+
+    const messages = {
+
+        "auth/invalid-email":
+            "البريد الإلكتروني غير صحيح.",
+
+        "auth/user-not-found":
+            "لا يوجد حساب بهذا البريد الإلكتروني.",
+
+        "auth/wrong-password":
+            "كلمة المرور غير صحيحة.",
+
+        "auth/invalid-credential":
+            "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+
+        "auth/email-already-in-use":
+            "هذا البريد الإلكتروني مستخدم بالفعل.",
+
+        "auth/weak-password":
+            "كلمة المرور ضعيفة. استخدم 8 أحرف أو أكثر.",
+
+        "auth/popup-closed-by-user":
+            "تم إغلاق نافذة تسجيل الدخول.",
+
+        "auth/popup-blocked":
+            "تم منع نافذة تسجيل الدخول من المتصفح.",
+
+        "auth/network-request-failed":
+            "حدثت مشكلة في الاتصال بالإنترنت.",
+
+        "auth/too-many-requests":
+            "تم إجراء محاولات كثيرة. حاول لاحقًا.",
+
+        "auth/user-disabled":
+            "هذا الحساب معطل.",
+
+        "auth/operation-not-allowed":
+            "طريقة تسجيل الدخول هذه غير مفعلة في Firebase.",
+
+        "auth/unauthorized-domain":
+            "هذا النطاق غير مضاف إلى النطاقات المسموح بها في Firebase."
+
+    };
+
+
+    return (
+        messages[code] ||
+        (error && error.message) ||
+        "حدث خطأ أثناء تسجيل الدخول."
+    );
+}
+
+
 /* REGISTER */
 
 async function register(event) {
@@ -1020,10 +1021,6 @@ async function register(event) {
     event.preventDefault();
 
     clearMessage();
-
-    const supabase = getSupabase();
-
-    if (!supabase) return;
 
 
     const username =
@@ -1099,74 +1096,43 @@ async function register(event) {
 
     try {
 
-        const result =
-            await supabase.auth.signUp({
+        const firebase =
+            await waitForFirebase();
 
+
+        const user =
+            await firebase.registerWithEmail(
                 email,
                 password,
-
-                options: {
-
-                    data: {
-                        username
-                    },
-
-                    emailRedirectTo:
-                        SITE_URL
-
-                }
-
-            });
-
-
-        const data = result.data;
-        const error = result.error;
-
-
-        if (error) {
-
-            console.error(
-                "REGISTER ERROR:",
-                error
+                username
             );
 
-            showMessage(
-                error.message ||
-                "تعذر إنشاء الحساب.",
-                "error"
+
+        if (user) {
+
+            localStorage.setItem(
+                "itachi_logged_in",
+                "true"
             );
 
-            return;
-        }
-
-
-        if (
-            data &&
-            data.user &&
-            data.session
-        ) {
 
             showMessage(
                 "تم إنشاء الحساب وتسجيل الدخول بنجاح ✔️",
                 "success"
             );
 
+
             setTimeout(
                 () => {
+
                     window.location.href =
                         SITE_URL;
+
                 },
                 900
             );
 
-            return;
         }
-
-
-        showMessage(
-            "تم إنشاء الحساب ✔️ تحقق من بريدك الإلكتروني لتأكيد الحساب.",
-            "success"
-        );
 
 
     } catch (error) {
@@ -1176,8 +1142,9 @@ async function register(event) {
             error
         );
 
+
         showMessage(
-            "حدث خطأ أثناء إنشاء الحساب.",
+            firebaseErrorMessage(error),
             "error"
         );
 
@@ -1200,10 +1167,6 @@ async function login(event) {
     event.preventDefault();
 
     clearMessage();
-
-    const supabase = getSupabase();
-
-    if (!supabase) return;
 
 
     const email =
@@ -1233,37 +1196,24 @@ async function login(event) {
 
     try {
 
-        const result =
-            await supabase.auth.signInWithPassword({
+        const firebase =
+            await waitForFirebase();
 
+
+        const user =
+            await firebase.loginWithEmail(
                 email,
                 password
-
-            });
-
-
-        const data = result.data;
-        const error = result.error;
-
-
-        if (error) {
-
-            console.error(
-                "LOGIN ERROR:",
-                error
             );
 
-            showMessage(
-                error.message ||
-                "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
-                "error"
+
+        if (user) {
+
+            localStorage.setItem(
+                "itachi_logged_in",
+                "true"
             );
 
-            return;
-        }
-
-
-        if (data && data.user) {
 
             showMessage(
                 "تم تسجيل الدخول بنجاح ✔️",
@@ -1291,8 +1241,9 @@ async function login(event) {
             error
         );
 
+
         showMessage(
-            "حدث خطأ أثناء تسجيل الدخول.",
+            firebaseErrorMessage(error),
             "error"
         );
 
@@ -1308,134 +1259,154 @@ async function login(event) {
 }
 
 
-/* GENERIC OAUTH */
+/* GOOGLE */
 
-async function oauthLogin(provider, buttonId, providerName) {
+async function googleLogin() {
 
     clearMessage();
 
 
-    const supabase =
-        getSupabase();
-
-    if (!supabase) return;
-
-
     const button =
-        document.getElementById(buttonId);
+        document.getElementById(
+            "googleButton"
+        );
 
 
-    if (button) {
-        button.disabled = true;
-    }
-
-
-    showMessage(
-        "جاري فتح " + providerName + "...",
-        "success"
-    );
+    button.disabled = true;
 
 
     try {
 
-        const result =
-            await supabase.auth.signInWithOAuth({
-
-                provider: provider,
-
-                options: {
-
-                    redirectTo:
-                        SITE_URL
-
-                }
-
-            });
+        showMessage(
+            "جاري فتح Google...",
+            "success"
+        );
 
 
-        const error =
-            result.error;
+        const firebase =
+            await waitForFirebase();
 
 
-        if (error) {
-
-            console.error(
-                providerName + " OAUTH ERROR:",
-                error
-            );
-
-            showMessage(
-                error.message ||
-                "تعذر تسجيل الدخول باستخدام " +
-                providerName + ".",
-                "error"
-            );
+        await firebase.googleLogin();
 
 
-            if (button) {
-                button.disabled = false;
-            }
+        localStorage.setItem(
+            "itachi_logged_in",
+            "true"
+        );
 
-        }
+
+        showMessage(
+            "تم تسجيل الدخول بواسطة Google ✔️",
+            "success"
+        );
+
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    SITE_URL;
+
+            },
+            700
+        );
+
 
     } catch (error) {
 
         console.error(
-            providerName + " ERROR:",
+            "GOOGLE LOGIN ERROR:",
             error
         );
 
+
         showMessage(
-            "حدث خطأ أثناء تسجيل الدخول باستخدام " +
-            providerName + ".",
+            firebaseErrorMessage(error),
             "error"
         );
 
+    } finally {
 
-        if (button) {
-            button.disabled = false;
-        }
+        button.disabled = false;
 
     }
-
-}
-
-
-/* GOOGLE */
-
-function googleLogin() {
-
-    oauthLogin(
-        "google",
-        "googleButton",
-        "Google"
-    );
 
 }
 
 
 /* GITHUB */
 
-function githubLogin() {
+async function githubLogin() {
 
-    oauthLogin(
-        "github",
-        "githubButton",
-        "GitHub"
-    );
-
-}
+    clearMessage();
 
 
-/* DISCORD */
+    const button =
+        document.getElementById(
+            "githubButton"
+        );
 
-function discordLogin() {
 
-    oauthLogin(
-        "discord",
-        "discordButton",
-        "Discord"
-    );
+    button.disabled = true;
+
+
+    try {
+
+        showMessage(
+            "جاري فتح GitHub...",
+            "success"
+        );
+
+
+        const firebase =
+            await waitForFirebase();
+
+
+        await firebase.githubLogin();
+
+
+        localStorage.setItem(
+            "itachi_logged_in",
+            "true"
+        );
+
+
+        showMessage(
+            "تم تسجيل الدخول بواسطة GitHub ✔️",
+            "success"
+        );
+
+
+        setTimeout(
+            () => {
+
+                window.location.href =
+                    SITE_URL;
+
+            },
+            700
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "GITHUB LOGIN ERROR:",
+            error
+        );
+
+
+        showMessage(
+            firebaseErrorMessage(error),
+            "error"
+        );
+
+    } finally {
+
+        button.disabled = false;
+
+    }
 
 }
 
@@ -1444,45 +1415,27 @@ function discordLogin() {
 
 async function checkSession() {
 
-    const supabase =
-        getSupabase();
-
-    if (!supabase) return;
-
-
     try {
 
-        const result =
-            await supabase.auth.getSession();
+        const firebase =
+            await waitForFirebase();
 
 
-        const data =
-            result.data;
-
-        const error =
-            result.error;
+        const user =
+            await firebase.getCurrentUser();
 
 
-        if (error) {
+        if (user) {
 
-            console.error(
-                "SESSION ERROR:",
-                error
+            localStorage.setItem(
+                "itachi_logged_in",
+                "true"
             );
 
-            return;
-        }
-
-
-        if (
-            data &&
-            data.session &&
-            data.session.user
-        ) {
 
             console.log(
                 "المستخدم مسجل الدخول:",
-                data.session.user.email
+                user.email
             );
 
         }
@@ -1499,40 +1452,6 @@ async function checkSession() {
 }
 
 
-/* AUTH STATE */
-
-function listenAuthState() {
-
-    const supabase =
-        getSupabase();
-
-    if (!supabase) return;
-
-
-    supabase.auth.onAuthStateChange(
-        function(event, session) {
-
-            console.log(
-                "AUTH EVENT:",
-                event
-            );
-
-            if (
-                event === "SIGNED_IN"
-            ) {
-
-                console.log(
-                    "تم تسجيل الدخول ✔️"
-                );
-
-            }
-
-        }
-    );
-
-}
-
-
 /* START */
 
 document.addEventListener(
@@ -1541,12 +1460,10 @@ document.addEventListener(
 
         checkSession();
 
-        listenAuthState();
-
     }
 );
 
 </script>
 
 </body>
-</html>
+    </html>
