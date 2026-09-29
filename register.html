@@ -732,51 +732,6 @@ input:focus {
         </button>
 
 
-        <!-- DISCORD -->
-
-        <button
-            id="discordButton"
-            class="social-button"
-            type="button"
-        >
-
-            <span class="social-icon">
-
-                <svg
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-
-                    <path
-                        fill="#5865F2"
-                        d="M19.54 5.2A16.2 16.2 0 0 0 15.57 4l-.48.98a14.7 14.7 0 0 0-6.18 0L8.43 4a16.2 16.2 0 0 0-3.97 1.2C2.39 8.68 1.7 12.38 2.04 16.1a16.2 16.2 0 0 0 4.96 2.52l1.2-1.65a9.5 9.5 0 0 1-1.85-.9l.45-.35c3.47 1.62 7.67 1.62 11.1 0l.46.35c-.58.36-1.2.66-1.85.9l1.2 1.65a16.2 16.2 0 0 0 4.96-2.52c.4-4.3-.65-8.03-3.13-10.9z"
-                    />
-
-                    <circle
-                        cx="8.5"
-                        cy="12"
-                        r="1.25"
-                        fill="#050505"
-                    />
-
-                    <circle
-                        cx="15.5"
-                        cy="12"
-                        r="1.25"
-                        fill="#050505"
-                    />
-
-                </svg>
-
-            </span>
-
-            <span>
-                المتابعة باستخدام Discord
-            </span>
-
-        </button>
-
-
         <!-- GITHUB -->
 
         <button
@@ -845,30 +800,12 @@ input:focus {
 </div>
 
 
-<!-- SUPABASE -->
+<!-- FIREBASE AUTH -->
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/auth.js"></script>
 
 
 <script>
-
-/* =====================================================
-   SUPABASE
-===================================================== */
-
-const SUPABASE_URL =
-    "https://oqrdadmfpwgrfcphddbu.supabase.co";
-
-const SUPABASE_ANON_KEY =
-    "sb_publishable_gHcWL0VoJXUTL4JXGZilZA_na0KSJQZ";
-
-
-const supabaseClient =
-    window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-    );
-
 
 /* =====================================================
    ELEMENTS
@@ -904,11 +841,6 @@ const googleButton =
         "googleButton"
     );
 
-const discordButton =
-    document.getElementById(
-        "discordButton"
-    );
-
 const githubButton =
     document.getElementById(
         "githubButton"
@@ -934,6 +866,99 @@ function showMessage(
 
     message.className =
         "message " + type;
+
+}
+
+
+/* =====================================================
+   WAIT FOR FIREBASE
+===================================================== */
+
+async function waitForFirebase() {
+
+    if (
+        !window.SOVTFirebase
+    ) {
+
+        throw new Error(
+            "Firebase لم يتم تشغيله."
+        );
+
+    }
+
+    await window.SOVTFirebase.ready();
+
+}
+
+
+/* =====================================================
+   FIREBASE ERROR
+===================================================== */
+
+function firebaseErrorMessage(
+    error
+) {
+
+    console.error(
+        "FIREBASE ERROR:",
+        error
+    );
+
+
+    if (
+        !error ||
+        !error.code
+    ) {
+
+        return "حدث خطأ أثناء إنشاء الحساب.";
+
+    }
+
+
+    switch (
+        error.code
+    ) {
+
+        case "auth/email-already-in-use":
+
+            return "هذا البريد الإلكتروني مستخدم بالفعل.";
+
+        case "auth/invalid-email":
+
+            return "البريد الإلكتروني غير صالح.";
+
+        case "auth/weak-password":
+
+            return "كلمة المرور ضعيفة. استخدم كلمة مرور أقوى.";
+
+        case "auth/operation-not-allowed":
+
+            return "تسجيل الدخول بالبريد الإلكتروني غير مفعّل في Firebase.";
+
+        case "auth/network-request-failed":
+
+            return "تعذر الاتصال بـ Firebase. تحقق من الإنترنت.";
+
+        case "auth/popup-blocked":
+
+            return "تم حظر نافذة تسجيل الدخول. اسمح بالنوافذ المنبثقة.";
+
+        case "auth/popup-closed-by-user":
+
+            return "تم إغلاق نافذة تسجيل الدخول.";
+
+        case "auth/unauthorized-domain":
+
+            return "هذا النطاق غير مضاف إلى النطاقات المصرح بها في Firebase.";
+
+        default:
+
+            return (
+                error.message ||
+                "حدث خطأ أثناء إنشاء الحساب."
+            );
+
+    }
 
 }
 
@@ -974,7 +999,9 @@ registerForm.addEventListener(
         }
 
 
-        if (password.length < 6) {
+        if (
+            password.length < 6
+        ) {
 
             showMessage(
                 "كلمة المرور يجب أن تكون 6 أحرف على الأقل.",
@@ -1001,51 +1028,26 @@ registerForm.addEventListener(
 
         try {
 
-            const {
-                data,
-                error
-            } =
-                await supabaseClient.auth.signUp({
-
-                    email:
-                        email,
-
-                    password:
-                        password,
-
-                    options: {
-
-                        emailRedirectTo:
-                            window.location.origin +
-                            "/login.html"
-
-                    }
-
-                });
+            await waitForFirebase();
 
 
-            if (error) {
-
-                console.error(
-                    "REGISTER ERROR:",
-                    error
+            const user =
+                await window.SOVTFirebase.registerWithEmail(
+                    email,
+                    password,
+                    ""
                 );
-
-                showMessage(
-                    error.message ||
-                    "حدث خطأ أثناء إنشاء الحساب.",
-                    "error"
-                );
-
-                return;
-
-            }
 
 
             if (
-                data.session &&
-                data.user
+                user
             ) {
+
+                localStorage.setItem(
+                    "itachi_logged_in",
+                    "true"
+                );
+
 
                 showMessage(
                     "تم إنشاء الحساب بنجاح ✔️",
@@ -1065,27 +1067,15 @@ registerForm.addEventListener(
 
             }
 
-            else {
-
-                showMessage(
-                    "تم إنشاء الحساب ✔️ تحقق من بريدك الإلكتروني لتأكيد الحساب.",
-                    "success"
-                );
-
-            }
-
 
         }
 
         catch(error) {
 
-            console.error(
-                "REGISTER ERROR:",
-                error
-            );
-
             showMessage(
-                "حدث خطأ غير متوقع.",
+                firebaseErrorMessage(
+                    error
+                ),
                 "error"
             );
 
@@ -1106,321 +1096,236 @@ registerForm.addEventListener(
 
 
 /* =====================================================
-   GOOGLE OAUTH
+   GOOGLE
 ===================================================== */
 
 googleButton.addEventListener(
     "click",
-    function() {
+    async function() {
 
-        startOAuth(
-            "google",
-            googleButton,
-            "Google"
+        googleButton.disabled =
+            true;
+
+
+        googleButton.innerHTML =
+            `
+            <span>
+                جاري فتح Google...
+            </span>
+            `;
+
+
+        showMessage(
+            "جاري فتح Google...",
+            "success"
         );
 
-    }
-);
+
+        try {
+
+            await waitForFirebase();
 
 
-/* =====================================================
-   DISCORD OAUTH
-===================================================== */
-
-discordButton.addEventListener(
-    "click",
-    function() {
-
-        startOAuth(
-            "discord",
-            discordButton,
-            "Discord"
-        );
-
-    }
-);
+            const user =
+                await window.SOVTFirebase.googleLogin();
 
 
-/* =====================================================
-   GITHUB OAUTH
-===================================================== */
+            if (
+                user
+            ) {
 
-githubButton.addEventListener(
-    "click",
-    function() {
-
-        startOAuth(
-            "github",
-            githubButton,
-            "GitHub"
-        );
-
-    }
-);
+                localStorage.setItem(
+                    "itachi_logged_in",
+                    "true"
+                );
 
 
-/* =====================================================
-   OAUTH FUNCTION
-===================================================== */
-
-async function startOAuth(
-    provider,
-    button,
-    providerName
-) {
-
-    button.disabled =
-        true;
+                showMessage(
+                    "تم تسجيل الدخول باستخدام Google ✔️",
+                    "success"
+                );
 
 
-    button.dataset.originalText =
-        button.innerText;
+                setTimeout(
+                    function() {
 
+                        window.location.href =
+                            "/";
 
-    button.innerHTML =
-        `
-        <span>
-            جاري فتح ${providerName}...
-        </span>
-        `;
+                    },
+                    800
+                );
 
+            }
 
-    showMessage(
-        "جاري فتح " +
-        providerName +
-        "...",
-        "success"
-    );
+        }
 
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabaseClient.auth.signInWithOAuth({
-
-                provider:
-                    provider,
-
-                options: {
-
-                    redirectTo:
-                        window.location.origin + "/"
-
-                }
-
-            });
-
-
-        if (error) {
-
-            console.error(
-                providerName +
-                " OAUTH ERROR:",
-                error
-            );
+        catch(error) {
 
             showMessage(
-                error.message ||
-                "تعذر فتح " +
-                providerName +
-                ".",
+                firebaseErrorMessage(
+                    error
+                ),
                 "error"
             );
 
-            resetOAuthButton(
-                button
-            );
+            googleButton.disabled =
+                false;
+
+            googleButton.innerHTML =
+                `
+                <span class="social-icon">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+
+                        <path
+                            fill="#4285F4"
+                            d="M21.35 12.23c0-.74-.07-1.46-.21-2.14H12v4.05h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.3z"
+                        />
+
+                        <path
+                            fill="#34A853"
+                            d="M12 21.8c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.8z"
+                        />
+
+                        <path
+                            fill="#FBBC05"
+                            d="M6.54 13.88A5.86 5.86 0 0 1 6.23 12c0-.65.11-1.28.31-1.88V7.59H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.41l3.25-2.53z"
+                        />
+
+                        <path
+                            fill="#EA4335"
+                            d="M12 6.09c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.19 14.63 2.2 12 2.2a9.75 9.75 0 0 0-8.71 5.39l3.25 2.53C7.31 7.81 9.46 6.09 12 6.09z"
+                        />
+
+                    </svg>
+
+                </span>
+
+                <span>
+                    المتابعة باستخدام Google
+                </span>
+                `;
 
         }
 
     }
+);
 
-    catch(error) {
 
-        console.error(
-            providerName +
-            " OAUTH ERROR:",
-            error
-        );
+/* =====================================================
+   GITHUB
+===================================================== */
+
+githubButton.addEventListener(
+    "click",
+    async function() {
+
+        githubButton.disabled =
+            true;
+
+
+        githubButton.innerHTML =
+            `
+            <span>
+                جاري فتح GitHub...
+            </span>
+            `;
+
 
         showMessage(
-            "حدث خطأ أثناء فتح " +
-            providerName +
-            ".",
-            "error"
+            "جاري فتح GitHub...",
+            "success"
         );
 
-        resetOAuthButton(
-            button
-        );
+
+        try {
+
+            await waitForFirebase();
+
+
+            const user =
+                await window.SOVTFirebase.githubLogin();
+
+
+            if (
+                user
+            ) {
+
+                localStorage.setItem(
+                    "itachi_logged_in",
+                    "true"
+                );
+
+
+                showMessage(
+                    "تم تسجيل الدخول باستخدام GitHub ✔️",
+                    "success"
+                );
+
+
+                setTimeout(
+                    function() {
+
+                        window.location.href =
+                            "/";
+
+                    },
+                    800
+                );
+
+            }
+
+        }
+
+        catch(error) {
+
+            showMessage(
+                firebaseErrorMessage(
+                    error
+                ),
+                "error"
+            );
+
+
+            githubButton.disabled =
+                false;
+
+
+            githubButton.innerHTML =
+                `
+                <span class="social-icon">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+
+                        <path
+                            fill="#ffffff"
+                            d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.22-3.37-1.22-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.52 1.06 1.52 1.06.9 1.57 2.35 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.02-2.75.54.72.39 1.63 1.02 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"
+                        />
+
+                    </svg>
+
+                </span>
+
+                <span>
+                    المتابعة باستخدام GitHub
+                </span>
+                `;
+
+        }
 
     }
-
-}
-
-
-/* =====================================================
-   RESET OAUTH BUTTON
-===================================================== */
-
-function resetOAuthButton(
-    button
-) {
-
-    button.disabled =
-        false;
-
-    button.innerHTML =
-        `
-        <span class="social-icon">
-            ${getOriginalIcon(button.id)}
-        </span>
-
-        <span>
-            المتابعة باستخدام
-            ${getProviderName(button.id)}
-        </span>
-        `;
-
-}
-
-
-/* =====================================================
-   PROVIDER NAME
-===================================================== */
-
-function getProviderName(
-    buttonId
-) {
-
-    if (
-        buttonId ===
-        "googleButton"
-    ) {
-        return "Google";
-    }
-
-    if (
-        buttonId ===
-        "discordButton"
-    ) {
-        return "Discord";
-    }
-
-    if (
-        buttonId ===
-        "githubButton"
-    ) {
-        return "GitHub";
-    }
-
-    return "";
-
-}
-
-
-/* =====================================================
-   ORIGINAL ICONS
-===================================================== */
-
-function getOriginalIcon(
-    buttonId
-) {
-
-    if (
-        buttonId ===
-        "googleButton"
-    ) {
-
-        return `
-        <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                fill="#4285F4"
-                d="M21.35 12.23c0-.74-.07-1.46-.21-2.14H12v4.05h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.3z"
-            />
-            <path
-                fill="#34A853"
-                d="M12 21.8c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.54 0-4.69-1.72-5.46-4.03H3.29v2.53A9.75 9.75 0 0 0 12 21.8z"
-            />
-            <path
-                fill="#FBBC05"
-                d="M6.54 13.88A5.86 5.86 0 0 1 6.23 12c0-.65.11-1.28.31-1.88V7.59H3.29A9.75 9.75 0 0 0 2.25 12c0 1.57.38 3.05 1.04 4.41l3.25-2.53z"
-            />
-            <path
-                fill="#EA4335"
-                d="M12 6.09c1.43 0 2.71.49 3.72 1.45l2.79-2.79C16.84 3.19 14.63 2.2 12 2.2a9.75 9.75 0 0 0-8.71 5.39l3.25 2.53C7.31 7.81 9.46 6.09 12 6.09z"
-            />
-        </svg>
-        `;
-
-    }
-
-
-    if (
-        buttonId ===
-        "discordButton"
-    ) {
-
-        return `
-        <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                fill="#5865F2"
-                d="M19.54 5.2A16.2 16.2 0 0 0 15.57 4l-.48.98a14.7 14.7 0 0 0-6.18 0L8.43 4a16.2 16.2 0 0 0-3.97 1.2C2.39 8.68 1.7 12.38 2.04 16.1a16.2 16.2 0 0 0 4.96 2.52l1.2-1.65a9.5 9.5 0 0 1-1.85-.9l.45-.35c3.47 1.62 7.67 1.62 11.1 0l.46.35c-.58.36-1.2.66-1.85.9l1.2 1.65a16.2 16.2 0 0 0 4.96-2.52c.4-4.3-.65-8.03-3.13-10.9z"
-            />
-            <circle
-                cx="8.5"
-                cy="12"
-                r="1.25"
-                fill="#050505"
-            />
-            <circle
-                cx="15.5"
-                cy="12"
-                r="1.25"
-                fill="#050505"
-            />
-        </svg>
-        `;
-
-    }
-
-
-    if (
-        buttonId ===
-        "githubButton"
-    ) {
-
-        return `
-        <svg
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-        >
-            <path
-                fill="#ffffff"
-                d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.7.5.1.68-.22.68-.49v-1.72c-2.78.62-3.37-1.22-3.37-1.22-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .08 1.52 1.06 1.52 1.06.9 1.57 2.35 1.12 2.93.86.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.06 0-1.12.39-2.03 1.02-2.75-.1-.26-.44-1.3.1-2.7 0 0 .83-.27 2.75 1.05a9.15 9.15 0 0 1 5 0c1.92-1.32 2.75-1.05 2.75-1.05.54 1.4.2 2.44.1 2.7.64.72 1.02 1.63 1.02 2.75 0 3.93-2.35 4.8-4.58 5.05.36.32.68.94.68 1.9v2.82c0 .27.18.59.69.49A10.26 10.26 0 0 0 22 12.23C22 6.58 17.52 2 12 2z"
-            />
-        </svg>
-        `;
-
-    }
-
-
-    return "";
-
-}
+);
 
 </script>
 
 
 </body>
 
-</html>
+    </html>
