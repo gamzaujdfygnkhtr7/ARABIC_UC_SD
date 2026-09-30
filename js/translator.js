@@ -1,7 +1,7 @@
 /* =========================================================
    SOVT TRANSLATOR ENGINE
-   V1.6
-   Dictionary → World API → External Fallback
+   V1.5
+   Dictionary + Smart Selection + API
 ========================================================= */
 
 class TranslatorEngine {
@@ -10,12 +10,15 @@ class TranslatorEngine {
         dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv",
         apiUrl = "https://arabic-uch-api.naruto9999rikodokuroma.workers.dev/api"
     ) {
+
         this.dictionaryUrl = dictionaryUrl;
+
         this.apiUrl = apiUrl;
 
         this.dictionary = new Map();
 
         this.loaded = false;
+
         this.loading = null;
     }
 
@@ -46,12 +49,15 @@ class TranslatorEngine {
                 );
 
                 if (!response.ok) {
+
                     throw new Error(
                         "Failed to load dictionary."
                     );
+
                 }
 
-                const text = await response.text();
+                const text =
+                    await response.text();
 
                 this.parseTSV(text);
 
@@ -136,7 +142,8 @@ class TranslatorEngine {
 
     parseTSV(text) {
 
-        const lines = text.split(/\r?\n/);
+        const lines =
+            text.split(/\r?\n/);
 
         for (const line of lines) {
 
@@ -144,25 +151,30 @@ class TranslatorEngine {
                 continue;
             }
 
-            const separator = line.indexOf("\t");
+            const separator =
+                line.indexOf("\t");
 
             if (separator === -1) {
                 continue;
             }
 
-            const source = line
-                .slice(0, separator)
-                .trim();
+            const source =
+                line.slice(
+                    0,
+                    separator
+                ).trim();
 
-            const target = line
-                .slice(separator + 1)
-                .trim();
+            const target =
+                line.slice(
+                    separator + 1
+                ).trim();
 
             if (!source || !target) {
                 continue;
             }
 
-            const key = this.normalize(source);
+            const key =
+                this.normalize(source);
 
             if (!this.dictionary.has(key)) {
 
@@ -186,9 +198,11 @@ class TranslatorEngine {
 
     findExact(text) {
 
-        const key = this.normalize(text);
+        const key =
+            this.normalize(text);
 
-        const results = this.dictionary.get(key);
+        const results =
+            this.dictionary.get(key);
 
         if (!results) {
             return [];
@@ -221,7 +235,9 @@ class TranslatorEngine {
             originalNormalized ===
             candidateNormalized
         ) {
+
             score += 1000;
+
         }
 
 
@@ -240,7 +256,9 @@ class TranslatorEngine {
             originalWords.length ===
             candidateWords.length
         ) {
+
             score += 100;
+
         }
 
 
@@ -253,20 +271,28 @@ class TranslatorEngine {
         if (options.target === "ar") {
 
             if (
-                /[\u0600-\u06FF]/.test(candidate)
+                /[\u0600-\u06FF]/
+                    .test(candidate)
             ) {
+
                 score += 30;
+
             }
+
         }
 
 
         if (options.target === "en") {
 
             if (
-                /^[\x00-\x7F]+$/.test(candidate)
+                /^[\x00-\x7F]+$/
+                    .test(candidate)
             ) {
+
                 score += 30;
+
             }
+
         }
 
 
@@ -288,7 +314,9 @@ class TranslatorEngine {
             !Array.isArray(translations) ||
             !translations.length
         ) {
+
             return null;
+
         }
 
 
@@ -304,6 +332,7 @@ class TranslatorEngine {
                             translation,
                             options
                         )
+
                 })
             );
 
@@ -319,7 +348,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       WORLD API
+       API REQUEST
     ===================================================== */
 
     async apiTranslate(
@@ -330,20 +359,29 @@ class TranslatorEngine {
 
         const response =
             await fetch(
-                this.apiUrl + "/translate",
+                this.apiUrl +
+                "/translate",
                 {
+
                     method: "POST",
 
                     headers: {
+
                         "Content-Type":
                             "application/json"
+
                     },
 
                     body: JSON.stringify({
+
                         text,
+
                         source,
+
                         target
+
                     })
+
                 }
             );
 
@@ -351,8 +389,9 @@ class TranslatorEngine {
         if (!response.ok) {
 
             throw new Error(
-                "SOVT World API request failed."
+                "SOVT API request failed."
             );
+
         }
 
 
@@ -360,26 +399,13 @@ class TranslatorEngine {
             await response.json();
 
 
-        if (
-            !data ||
-            data.success !== true
-        ) {
+        if (!data.success) {
 
             throw new Error(
-                data?.error ||
-                "SOVT World API translation failed."
+                data.error ||
+                "SOVT API translation failed."
             );
-        }
 
-
-        if (
-            !data.translation ||
-            !String(data.translation).trim()
-        ) {
-
-            throw new Error(
-                "World API returned empty translation."
-            );
         }
 
 
@@ -388,7 +414,7 @@ class TranslatorEngine {
 
 
     /* =====================================================
-       EXTERNAL FALLBACK
+       GOOGLE FALLBACK
     ===================================================== */
 
     async googleTranslate(
@@ -419,6 +445,7 @@ class TranslatorEngine {
             throw new Error(
                 "External translation failed."
             );
+
         }
 
 
@@ -434,6 +461,7 @@ class TranslatorEngine {
             throw new Error(
                 "Invalid translation response."
             );
+
         }
 
 
@@ -450,6 +478,7 @@ class TranslatorEngine {
             throw new Error(
                 "Empty translation."
             );
+
         }
 
 
@@ -466,6 +495,9 @@ class TranslatorEngine {
         options = {}
     ) {
 
+        await this.load();
+
+
         if (
             typeof text !== "string" ||
             !text.trim()
@@ -477,9 +509,8 @@ class TranslatorEngine {
 
                 type: "invalid_input",
 
-                translations: [],
+                translations: []
 
-                error: "Text is empty."
             };
         }
 
@@ -495,62 +526,51 @@ class TranslatorEngine {
            1. LOCAL DICTIONARY
         --------------------------------------------- */
 
-        try {
-
-            await this.load();
-
-            const localTranslations =
-                this.findExact(text);
+        const localTranslations =
+            this.findExact(text);
 
 
-            if (localTranslations.length) {
+        if (localTranslations.length) {
 
-                const best =
-                    this.chooseBest(
-                        text,
-                        localTranslations,
-                        {
-                            source,
-                            target
-                        }
-                    );
+            const best =
+                this.chooseBest(
+                    text,
+                    localTranslations,
+                    {
+                        source,
+                        target
+                    }
+                );
 
 
-                if (best) {
+            if (best) {
 
-                    return {
+                return {
 
-                        success: true,
+                    success: true,
 
-                        type: "exact",
+                    type: "exact",
 
-                        translations: [
-                            best.translation
-                        ],
+                    translations: [
+                        best.translation
+                    ],
 
-                        score:
-                            best.score,
+                    score:
+                        best.score,
 
-                        source:
-                            "dictionary",
+                    source:
+                        "dictionary",
 
-                        api:
-                            false
-                    };
-                }
+                    api:
+                        false
+
+                };
             }
-
-        } catch (error) {
-
-            console.warn(
-                "SOVT Dictionary unavailable:",
-                error
-            );
         }
 
 
         /* ---------------------------------------------
-           2. WORLD API
+           2. SOVT API
         --------------------------------------------- */
 
         try {
@@ -576,21 +596,23 @@ class TranslatorEngine {
                 ],
 
                 source:
-                    "world_api",
+                    "api",
 
                 cached:
                     apiResult.cached === true,
 
                 api:
                     true
+
             };
 
-        } catch (error) {
+        } catch (apiError) {
 
             console.warn(
-                "SOVT World API unavailable:",
-                error
+                "SOVT API unavailable:",
+                apiError
             );
+
         }
 
 
@@ -623,6 +645,7 @@ class TranslatorEngine {
 
                 api:
                     false
+
             };
 
         } catch (error) {
@@ -638,6 +661,7 @@ class TranslatorEngine {
 
                 error:
                     error.message
+
             };
         }
     }
@@ -699,6 +723,8 @@ document.addEventListener(
                 "SOVT startup error:",
                 error
             );
+
         }
+
     }
 );
