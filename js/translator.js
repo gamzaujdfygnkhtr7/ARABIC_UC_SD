@@ -8,7 +8,7 @@ class TranslatorEngine {
 
     constructor(
         dictionaryUrl = "./data/ITACHI_DICTIONARY.tsv",
-        apiUrl = "https://arabic-uch-api.naruto9999rikodokuroma.workers.dev/api"
+        apiUrl = ""
     ) {
 
         this.dictionaryUrl = dictionaryUrl;
@@ -685,7 +685,7 @@ class TranslatorEngine {
 const translator =
     new TranslatorEngine(
         "./data/ITACHI_DICTIONARY.tsv",
-        "https://arabic-uch-api.naruto9999rikodokuroma.workers.dev/api"
+        ""
     );
 
 
