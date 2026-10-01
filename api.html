@@ -1,355 +1,632 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>SOVT API</title>
+<title>SOVT API</title>
 
-    <link rel="stylesheet" href="animations.css">
+<style>
+*{
+  box-sizing:border-box;
+  margin:0;
+  padding:0;
+}
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+body{
+  font-family:Arial,sans-serif;
+  background:
+    radial-gradient(circle at 50% -20%,#5b0000 0%,#170000 28%,#050505 65%);
+  color:white;
+  min-height:100vh;
+  overflow-x:hidden;
+}
 
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background: #050505;
-            color: #fff;
-            font-family: Arial, sans-serif;
-        }
+body:before{
+  content:"";
+  position:fixed;
+  width:420px;
+  height:420px;
+  background:#ff0000;
+  filter:blur(160px);
+  opacity:.10;
+  top:-180px;
+  left:50%;
+  transform:translateX(-50%);
+  pointer-events:none;
+}
 
-        header {
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 18px;
-            background: #090909;
-            border-bottom: 1px solid #2b0000;
-        }
+header{
+  height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 22px;
+  border-bottom:1px solid #300000;
+  background:rgba(0,0,0,.65);
+  backdrop-filter:blur(15px);
+  position:sticky;
+  top:0;
+  z-index:20;
+}
 
-        .menu-btn {
-            width: 45px;
-            height: 45px;
-            border: 1px solid #660000;
-            background: #120000;
-            color: #fff;
-            border-radius: 10px;
-            font-size: 24px;
-            cursor: pointer;
-        }
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:bold;
+  font-size:21px;
+  letter-spacing:2px;
+}
 
-        .brand {
-            text-align: center;
-        }
+.logo img{
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 10px #d00000);
+}
 
-        .brand h1 {
-            margin: 0;
-            font-size: 23px;
-            color: #fff;
-        }
+.menu{
+  width:43px;
+  height:43px;
+  border:1px solid #620000;
+  border-radius:12px;
+  background:#120000;
+  color:white;
+  font-size:23px;
+  cursor:pointer;
+  transition:.3s;
+}
 
-        .brand p {
-            margin: 3px 0 0;
-            color: #999;
-            font-size: 11px;
-        }
+.menu:hover{
+  background:#850000;
+  transform:scale(1.05);
+}
 
-        main {
-            width: 92%;
-            max-width: 850px;
-            margin: 35px auto;
-        }
+.side{
+  position:fixed;
+  top:0;
+  right:-290px;
+  width:280px;
+  height:100vh;
+  background:#090909;
+  border-left:1px solid #650000;
+  z-index:50;
+  padding:25px 18px;
+  transition:.4s cubic-bezier(.2,.8,.2,1);
+  box-shadow:-15px 0 50px rgba(255,0,0,.12);
+}
 
-        .hero {
-            background: linear-gradient(
-                145deg,
-                #160000,
-                #090909
-            );
+.side.open{
+  right:0;
+}
 
-            border: 1px solid #550000;
-            border-radius: 18px;
-            padding: 30px 22px;
-            text-align: center;
-        }
+.side h2{
+  margin-bottom:25px;
+  color:#ff3030;
+}
 
-        .hero h2 {
-            margin: 0 0 12px;
-            font-size: 30px;
-        }
+.side a{
+  display:block;
+  color:#ddd;
+  text-decoration:none;
+  padding:14px;
+  margin:7px 0;
+  border-radius:10px;
+  transition:.25s;
+}
 
-        .hero p {
-            color: #aaa;
-            line-height: 1.7;
-            margin: 0 auto 25px;
-            max-width: 600px;
-        }
+.side a:hover{
+  background:#260000;
+  color:white;
+  transform:translateX(-5px);
+}
 
-        .create-btn {
-            border: 0;
-            border-radius: 10px;
-            padding: 14px 25px;
-            background: #9b0000;
-            color: #fff;
-            font-size: 16px;
-            cursor: pointer;
-        }
+.close{
+  float:left;
+  border:0;
+  background:none;
+  color:white;
+  font-size:25px;
+  cursor:pointer;
+}
 
-        .create-btn:hover {
-            background: #c00000;
-        }
+main{
+  width:min(1000px,92%);
+  margin:45px auto;
+}
 
-        .section {
-            margin-top: 25px;
-            background: #090909;
-            border: 1px solid #292929;
-            border-radius: 16px;
-            padding: 22px;
-        }
+.hero{
+  text-align:center;
+  animation:fadeUp .7s ease;
+}
 
-        .section h3 {
-            margin-top: 0;
-        }
+.hero img{
+  width:105px;
+  height:105px;
+  object-fit:contain;
+  filter:drop-shadow(0 0 22px rgba(255,0,0,.45));
+  animation:float 4s ease-in-out infinite;
+}
 
-        .info {
-            color: #aaa;
-            line-height: 1.8;
-        }
+.hero h1{
+  margin-top:15px;
+  font-size:42px;
+  letter-spacing:5px;
+}
 
-        .limit {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 10px;
-            background: #120000;
-            border: 1px solid #400000;
-            color: #ddd;
-        }
+.hero h1 span{
+  color:#ff2020;
+}
 
-        .side-menu {
-            position: fixed;
-            top: 0;
-            right: -280px;
-            width: 280px;
-            height: 100%;
-            background: #080808;
-            border-left: 1px solid #550000;
-            padding: 25px 18px;
-            z-index: 1000;
-            transition: right .25s ease;
-        }
+.hero p{
+  margin-top:10px;
+  color:#aaa;
+  font-size:15px;
+}
 
-        .side-menu.open {
-            right: 0;
-        }
+.status{
+  margin:30px auto;
+  width:min(700px,100%);
+  padding:18px;
+  border:1px solid #360000;
+  background:rgba(20,0,0,.7);
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  box-shadow:0 0 30px rgba(255,0,0,.06);
+}
 
-        .close-btn {
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #550000;
-            background: #120000;
-            color: #fff;
-            border-radius: 10px;
-            cursor: pointer;
-        }
+.dot{
+  width:12px;
+  height:12px;
+  border-radius:50%;
+  background:#777;
+  box-shadow:0 0 10px #777;
+}
 
-        .side-menu a {
-            display: block;
-            padding: 13px 10px;
-            margin: 7px 0;
-            color: #ddd;
-            text-decoration: none;
-            border-radius: 8px;
-        }
+.dot.online{
+  background:#00ff72;
+  box-shadow:0 0 15px #00ff72;
+  animation:pulse 1.5s infinite;
+}
 
-        .side-menu a:hover {
-            background: #180000;
-            color: #fff;
-        }
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:18px;
+  margin-top:25px;
+}
 
-        .overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.65);
-            display: none;
-            z-index: 900;
-        }
+.card{
+  background:linear-gradient(145deg,rgba(30,0,0,.85),rgba(8,8,8,.9));
+  border:1px solid #350000;
+  border-radius:18px;
+  padding:22px;
+  transition:.3s;
+  animation:fadeUp .8s ease both;
+}
 
-        .overlay.show {
-            display: block;
-        }
-    </style>
+.card:hover{
+  transform:translateY(-5px);
+  border-color:#850000;
+  box-shadow:0 12px 35px rgba(255,0,0,.09);
+}
+
+.card h3{
+  color:#ff3535;
+  margin-bottom:12px;
+}
+
+.value{
+  color:#eee;
+  word-break:break-word;
+}
+
+.endpoint{
+  direction:ltr;
+  text-align:left;
+  font-family:monospace;
+  color:#ff5757;
+  background:#050505;
+  padding:11px;
+  border-radius:9px;
+  margin-top:10px;
+  border:1px solid #250000;
+}
+
+.tools{
+  margin-top:25px;
+}
+
+.tools h2{
+  margin-bottom:15px;
+}
+
+.test{
+  background:#090909;
+  border:1px solid #390000;
+  border-radius:18px;
+  padding:20px;
+}
+
+textarea{
+  width:100%;
+  min-height:120px;
+  resize:vertical;
+  background:#050505;
+  color:white;
+  border:1px solid #3b0000;
+  border-radius:12px;
+  padding:14px;
+  outline:none;
+  font-size:16px;
+}
+
+textarea:focus{
+  border-color:#b00000;
+  box-shadow:0 0 15px rgba(255,0,0,.1);
+}
+
+.row{
+  display:flex;
+  gap:10px;
+  margin-top:12px;
+}
+
+select,button{
+  border:1px solid #570000;
+  background:#160000;
+  color:white;
+  padding:13px;
+  border-radius:10px;
+}
+
+select{
+  flex:1;
+  outline:none;
+}
+
+button{
+  cursor:pointer;
+  font-weight:bold;
+  transition:.25s;
+}
+
+.translate{
+  background:linear-gradient(135deg,#b00000,#610000);
+  min-width:130px;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  filter:brightness(1.2);
+}
+
+.result{
+  margin-top:15px;
+  padding:16px;
+  min-height:55px;
+  background:#030303;
+  border:1px solid #280000;
+  border-radius:12px;
+  color:#ddd;
+  white-space:pre-wrap;
+}
+
+.api-info{
+  margin-top:25px;
+  padding:22px;
+  border-radius:18px;
+  background:#080808;
+  border:1px solid #350000;
+}
+
+.api-info h2{
+  margin-bottom:15px;
+}
+
+.code{
+  direction:ltr;
+  text-align:left;
+  background:#020202;
+  border:1px solid #280000;
+  padding:15px;
+  border-radius:12px;
+  overflow:auto;
+  color:#ddd;
+  font-family:monospace;
+}
+
+footer{
+  text-align:center;
+  color:#666;
+  padding:35px 10px;
+}
+
+@keyframes fadeUp{
+  from{
+    opacity:0;
+    transform:translateY(25px);
+  }
+  to{
+    opacity:1;
+    transform:translateY(0);
+  }
+}
+
+@keyframes float{
+  0%,100%{transform:translateY(0)}
+  50%{transform:translateY(-8px)}
+}
+
+@keyframes pulse{
+  50%{opacity:.4}
+}
+
+@media(max-width:650px){
+  .grid{
+    grid-template-columns:1fr;
+  }
+
+  .hero h1{
+    font-size:32px;
+  }
+
+  .row{
+    flex-direction:column;
+  }
+}
+</style>
 </head>
 
 <body>
 
 <header>
+  <div class="logo">
+    <img src="images/itachi_logo.png">
+    <span>SOVT</span>
+  </div>
 
-    <button
-        class="menu-btn"
-        id="menuBtn">
-        ☰
-    </button>
-
-    <div class="brand">
-        <h1>SOVT</h1>
-        <p>ITACHI ARABIC</p>
-    </div>
-
-    <div style="width:45px;"></div>
-
+  <button class="menu" onclick="openMenu()">☰</button>
 </header>
 
+<nav class="side" id="side">
+  <button class="close" onclick="closeMenu()">×</button>
+  <h2>SOVT</h2>
 
-<div
-    class="overlay"
-    id="overlay">
-</div>
-
-
-<nav
-    class="side-menu"
-    id="sideMenu">
-
-    <button
-        class="close-btn"
-        id="closeBtn">
-        إغلاق
-    </button>
-
-    <a href="index.html">
-        الرئيسية
-    </a>
-
-    <a href="profile.html">
-        الملف الشخصي
-    </a>
-
-    <a href="dashboard.html">
-        لوحة التحكم
-    </a>
-
-    <a href="api.html">
-        API
-    </a>
-
-    <a href="settings.html">
-        الإعدادات
-    </a>
-
-    <a href="login.html">
-        تسجيل الدخول
-    </a>
-
+  <a href="index.html">الرئيسية</a>
+  <a href="dashboard.html">Dashboard</a>
+  <a href="profile.html">الملف الشخصي</a>
+  <a href="api.html">SOVT API</a>
+  <a href="settings.html">الإعدادات</a>
+  <a href="login.html">تسجيل الدخول</a>
 </nav>
-
 
 <main>
 
-    <section class="hero">
+<section class="hero">
+  <img src="images/itachi_logo.png">
+  <h1>SOVT <span>API</span></h1>
+  <p>World Translation API — powered by SOVT</p>
+</section>
 
-        <h2>SOVT API</h2>
+<div class="status">
+  <span class="dot" id="dot"></span>
+  <span id="statusText">جاري الاتصال بـ SOVT API...</span>
+</div>
 
-        <p>
-            استخدم نظام الترجمة الخاص بـ SOVT
-            داخل تطبيقاتك ومواقعك ومشاريعك.
-        </p>
+<section class="grid">
 
-        <button
-            class="create-btn"
-            id="createApiBtn">
-            إنشاء API Key
-        </button>
+  <div class="card">
+    <h3>API Version</h3>
+    <div class="value" id="version">...</div>
+  </div>
 
-    </section>
+  <div class="card">
+    <h3>API Status</h3>
+    <div class="value" id="apiStatus">...</div>
+  </div>
 
+  <div class="card">
+    <h3>Provider</h3>
+    <div class="value" id="provider">...</div>
+  </div>
 
-    <section class="section">
+  <div class="card">
+    <h3>Languages</h3>
+    <div class="value" id="languages">جاري التحميل...</div>
+  </div>
 
-        <h3>API Keys</h3>
+</section>
 
-        <p class="info">
-            هنا ستظهر مفاتيح API الخاصة بحسابك.
-        </p>
+<section class="tools">
 
-        <div class="limit">
-            الحد الأقصى للمفاتيح:
-            <strong>10</strong>
-            مفاتيح لكل حساب.
-        </div>
+<h2>⚡ اختبار SOVT API</h2>
 
-    </section>
+<div class="test">
+
+<textarea id="text" placeholder="اكتب النص الذي تريد ترجمته..."></textarea>
+
+<div class="row">
+
+<select id="source">
+  <option value="auto">Auto Detect</option>
+  <option value="ar">العربية</option>
+  <option value="en">English</option>
+  <option value="zh">中文</option>
+  <option value="ja">日本語</option>
+  <option value="ko">한국어</option>
+  <option value="fr">Français</option>
+  <option value="de">Deutsch</option>
+  <option value="es">Español</option>
+</select>
+
+<select id="target">
+  <option value="en">English</option>
+  <option value="ar">العربية</option>
+  <option value="zh">中文</option>
+  <option value="ja">日本語</option>
+  <option value="ko">한국어</option>
+  <option value="fr">Français</option>
+  <option value="de">Deutsch</option>
+  <option value="es">Español</option>
+</select>
+
+<button class="translate" onclick="translateText()">ترجمة ⚡</button>
+
+</div>
+
+<div class="result" id="result">
+النتيجة ستظهر هنا...
+</div>
+
+</div>
+</section>
+
+<section class="api-info">
+
+<h2>🌐 SOVT World API</h2>
+
+<div class="endpoint">
+https://arabic-uch-api.naruto9999rikodokuroma.workers.dev/api/translate
+</div>
+
+<br>
+
+<div class="code">
+POST /api/translate
+
+{
+  "text": "مرحبا",
+  "source": "ar",
+  "target": "en"
+}
+</div>
+
+</section>
 
 </main>
 
+<footer>
+SOVT World API • Create. Build. Beyond.
+</footer>
 
 <script>
 
-    const menuBtn =
-        document.getElementById("menuBtn");
+const API =
+"https://arabic-uch-api.naruto9999rikodokuroma.workers.dev";
 
-    const closeBtn =
-        document.getElementById("closeBtn");
+const side=document.getElementById("side");
 
-    const sideMenu =
-        document.getElementById("sideMenu");
+function openMenu(){
+  side.classList.add("open");
+}
 
-    const overlay =
-        document.getElementById("overlay");
+function closeMenu(){
+  side.classList.remove("open");
+}
 
+async function loadAPI(){
 
-    function openMenu() {
+  try{
 
-        sideMenu.classList.add("open");
+    const response=await fetch(API+"/api/status");
+    const data=await response.json();
 
-        overlay.classList.add("show");
+    if(data.success){
+
+      document.getElementById("dot")
+        .classList.add("online");
+
+      document.getElementById("statusText")
+        .textContent="SOVT API متصل ويعمل";
+
+      document.getElementById("version")
+        .textContent=data.version||"2.0.0";
+
+      document.getElementById("apiStatus")
+        .textContent=data.status||"online";
+
+      document.getElementById("provider")
+        .textContent=data.provider||"SOVT";
+
     }
 
+    const lang=await fetch(API+"/api/languages");
+    const langData=await lang.json();
 
-    function closeMenu() {
-
-        sideMenu.classList.remove("open");
-
-        overlay.classList.remove("show");
+    if(langData.success){
+      document.getElementById("languages")
+        .textContent=langData.count+" لغة متاحة";
     }
 
+  }catch(error){
 
-    menuBtn.addEventListener(
-        "click",
-        openMenu
-    );
+    document.getElementById("statusText")
+      .textContent="تعذر الاتصال بـ SOVT API";
 
+  }
+}
 
-    closeBtn.addEventListener(
-        "click",
-        closeMenu
-    );
+async function translateText(){
 
+  const text=document.getElementById("text").value.trim();
+  const source=document.getElementById("source").value;
+  const target=document.getElementById("target").value;
+  const result=document.getElementById("result");
 
-    overlay.addEventListener(
-        "click",
-        closeMenu
-    );
+  if(!text){
+    result.textContent="اكتب نصًا أولًا.";
+    return;
+  }
 
+  result.textContent="جاري الترجمة... ⚡";
 
-    document
-        .getElementById("createApiBtn")
-        .addEventListener(
-            "click",
-            function () {
+  try{
 
-                alert(
-                    "نظام إنشاء API Keys سيتم تفعيله بعد ربط الخادم."
-                );
+    const response=await fetch(API+"/api/translate",{
 
-            }
-        );
+      method:"POST",
+
+      headers:{
+        "Content-Type":"application/json"
+      },
+
+      body:JSON.stringify({
+        text,
+        source,
+        target
+      })
+
+    });
+
+    const data=await response.json();
+
+    if(data.success){
+
+      result.textContent=data.translation;
+
+    }else{
+
+      result.textContent=
+        "خطأ: "+(data.error||"فشل الترجمة");
+
+    }
+
+  }catch(error){
+
+    result.textContent=
+      "تعذر الاتصال بـ SOVT API.";
+
+  }
+}
+
+loadAPI();
 
 </script>
 
 </body>
-      </html>
+</html>
