@@ -1,1 +1,355 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+    <title>SOVT API</title>
+
+    <link rel="stylesheet" href="animations.css">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #050505;
+            color: #fff;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            background: #090909;
+            border-bottom: 1px solid #2b0000;
+        }
+
+        .menu-btn {
+            width: 45px;
+            height: 45px;
+            border: 1px solid #660000;
+            background: #120000;
+            color: #fff;
+            border-radius: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .brand {
+            text-align: center;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 23px;
+            color: #fff;
+        }
+
+        .brand p {
+            margin: 3px 0 0;
+            color: #999;
+            font-size: 11px;
+        }
+
+        main {
+            width: 92%;
+            max-width: 850px;
+            margin: 35px auto;
+        }
+
+        .hero {
+            background: linear-gradient(
+                145deg,
+                #160000,
+                #090909
+            );
+
+            border: 1px solid #550000;
+            border-radius: 18px;
+            padding: 30px 22px;
+            text-align: center;
+        }
+
+        .hero h2 {
+            margin: 0 0 12px;
+            font-size: 30px;
+        }
+
+        .hero p {
+            color: #aaa;
+            line-height: 1.7;
+            margin: 0 auto 25px;
+            max-width: 600px;
+        }
+
+        .create-btn {
+            border: 0;
+            border-radius: 10px;
+            padding: 14px 25px;
+            background: #9b0000;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .create-btn:hover {
+            background: #c00000;
+        }
+
+        .section {
+            margin-top: 25px;
+            background: #090909;
+            border: 1px solid #292929;
+            border-radius: 16px;
+            padding: 22px;
+        }
+
+        .section h3 {
+            margin-top: 0;
+        }
+
+        .info {
+            color: #aaa;
+            line-height: 1.8;
+        }
+
+        .limit {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 10px;
+            background: #120000;
+            border: 1px solid #400000;
+            color: #ddd;
+        }
+
+        .side-menu {
+            position: fixed;
+            top: 0;
+            right: -280px;
+            width: 280px;
+            height: 100%;
+            background: #080808;
+            border-left: 1px solid #550000;
+            padding: 25px 18px;
+            z-index: 1000;
+            transition: right .25s ease;
+        }
+
+        .side-menu.open {
+            right: 0;
+        }
+
+        .close-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #550000;
+            background: #120000;
+            color: #fff;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        .side-menu a {
+            display: block;
+            padding: 13px 10px;
+            margin: 7px 0;
+            color: #ddd;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .side-menu a:hover {
+            background: #180000;
+            color: #fff;
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.65);
+            display: none;
+            z-index: 900;
+        }
+
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+
+    <button
+        class="menu-btn"
+        id="menuBtn">
+        ☰
+    </button>
+
+    <div class="brand">
+        <h1>SOVT</h1>
+        <p>ITACHI ARABIC</p>
+    </div>
+
+    <div style="width:45px;"></div>
+
+</header>
+
+
+<div
+    class="overlay"
+    id="overlay">
+</div>
+
+
+<nav
+    class="side-menu"
+    id="sideMenu">
+
+    <button
+        class="close-btn"
+        id="closeBtn">
+        إغلاق
+    </button>
+
+    <a href="index.html">
+        الرئيسية
+    </a>
+
+    <a href="profile.html">
+        الملف الشخصي
+    </a>
+
+    <a href="dashboard.html">
+        لوحة التحكم
+    </a>
+
+    <a href="api.html">
+        API
+    </a>
+
+    <a href="settings.html">
+        الإعدادات
+    </a>
+
+    <a href="login.html">
+        تسجيل الدخول
+    </a>
+
+</nav>
+
+
+<main>
+
+    <section class="hero">
+
+        <h2>SOVT API</h2>
+
+        <p>
+            استخدم نظام الترجمة الخاص بـ SOVT
+            داخل تطبيقاتك ومواقعك ومشاريعك.
+        </p>
+
+        <button
+            class="create-btn"
+            id="createApiBtn">
+            إنشاء API Key
+        </button>
+
+    </section>
+
+
+    <section class="section">
+
+        <h3>API Keys</h3>
+
+        <p class="info">
+            هنا ستظهر مفاتيح API الخاصة بحسابك.
+        </p>
+
+        <div class="limit">
+            الحد الأقصى للمفاتيح:
+            <strong>10</strong>
+            مفاتيح لكل حساب.
+        </div>
+
+    </section>
+
+</main>
+
+
+<script>
+
+    const menuBtn =
+        document.getElementById("menuBtn");
+
+    const closeBtn =
+        document.getElementById("closeBtn");
+
+    const sideMenu =
+        document.getElementById("sideMenu");
+
+    const overlay =
+        document.getElementById("overlay");
+
+
+    function openMenu() {
+
+        sideMenu.classList.add("open");
+
+        overlay.classList.add("show");
+    }
+
+
+    function closeMenu() {
+
+        sideMenu.classList.remove("open");
+
+        overlay.classList.remove("show");
+    }
+
+
+    menuBtn.addEventListener(
+        "click",
+        openMenu
+    );
+
+
+    closeBtn.addEventListener(
+        "click",
+        closeMenu
+    );
+
+
+    overlay.addEventListener(
+        "click",
+        closeMenu
+    );
+
+
+    document
+        .getElementById("createApiBtn")
+        .addEventListener(
+            "click",
+            function () {
+
+                alert(
+                    "نظام إنشاء API Keys سيتم تفعيله بعد ربط الخادم."
+                );
+
+            }
+        );
+
+</script>
+
+</body>
+      </html>
