@@ -1,11 +1,13 @@
-أهلا	Hello
-Hello	أهلا
-مرحبا	Welcome
-Welcome	مرحبا
-كيفك	How are you
-How are you	كيفك
-كيف حالك	How are you
-How are you	كيف حالك
+أهلا	Hi
+Hi	أهلا
+مرحبا	Hello
+Hello	مرحبا
+أهلا وسهلا	Welcome
+Welcome	أهلا وسهلا
+كيفك	How are you?
+How are you?	كيفك
+كيف حالك	How are you?
+How are you?	كيف حالك
 صباح الخير	Good morning
 Good morning	صباح الخير
 مساء الخير	Good evening
@@ -14,8 +16,8 @@ Good evening	مساء الخير
 Good morning	صباح النور
 مساء النور	Good evening
 Good evening	مساء النور
-شكرا	Thanks
-Thanks	شكرا
+شكرا	Thank you
+Thank you	شكرا
 شكرا لك	Thank you
 Thank you	شكرا لك
 شكرا جزيلا	Thank you very much
